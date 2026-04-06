@@ -1,0 +1,65 @@
+# stages:
+#   - build-dev
+#   - deploy-dev
+#   - build-prod
+#   - deploy-prod
+
+# build-dev:
+#   stage: build-dev
+#   image: docker:25.0.3
+#   services:
+#     - docker:25.0.3-dind
+#   script:
+#     - echo "Building for DEVELOPMENT environment"
+#     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+#     - docker build -f Dockerfile -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+#     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+#     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:dev-latest
+#     - docker push $CI_REGISTRY_IMAGE:dev-latest
+#   only:
+#     - development
+
+# deploy-dev:
+#   stage: deploy-dev
+#   before_script:
+#     - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+#     - eval $(ssh-agent -s)
+#     - echo "$SSH_PRIVATE_KEY_DEV" | tr -d '\r' | ssh-add -
+#     - mkdir -p ~/.ssh
+#     - chmod 700 ~/.ssh
+#     - ssh-keyscan -H $VM_HOST_DEV >> ~/.ssh/known_hosts
+#   script:
+#     - ssh $VM_USER_DEV@$VM_HOST_DEV "docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"
+#     - ssh $VM_USER_DEV@$VM_HOST_DEV "cd /home/terralog_ck3/geospectra/web && docker-compose pull && docker-compose up -d"
+#   only:
+#     - development
+
+# build-prod:
+#  stage: build-prod
+#  image: docker:25.0.3
+#  services:
+#    - docker:25.0.3-dind
+#  script:
+#    - echo "Building for PRODUCTION environment"
+#    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+#    - docker build -f Dockerfile.production -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+#    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+#    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:prod-latest
+#    - docker push $CI_REGISTRY_IMAGE:prod-latest
+#  only:
+#    - production
+
+# deploy-prod:
+#  stage: deploy-prod
+#  before_script:
+#    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+#    - eval $(ssh-agent -s)
+#    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+#    - mkdir -p ~/.ssh
+#    - chmod 700 ~/.ssh
+#    - ssh-keyscan -H $VM_HOST >> ~/.ssh/known_hosts
+#  script:
+#    - ssh $VM_USER@$VM_HOST "docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"
+#    - ssh $VM_USER@$VM_HOST "cd /home/terralog_ck3/mt-survey-prod && docker compose pull mt-survey-web-prod && docker compose up mt-survey-web-prod -d"
+#  only:
+#    - production
