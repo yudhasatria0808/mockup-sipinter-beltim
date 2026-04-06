@@ -104,8 +104,7 @@ export default function KewaspadaanForm() {
     return errs;
   };
 
-  const handleSubmit = (e: React.FormEvent, submitStatus: "draft" | "menunggu") => {
-    e.preventDefault();
+  const handleSubmit = (submitStatus: "draft" | "menunggu") => {
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
@@ -279,10 +278,10 @@ export default function KewaspadaanForm() {
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={(e) => handleSubmit(e, "draft")}>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => handleSubmit("draft")}>
               <SaveIcon /> Simpan Draft
             </Button>
-            <Button type="button" size="sm" className="gap-1.5" onClick={(e) => handleSubmit(e, "menunggu")}>
+            <Button type="button" size="sm" className="gap-1.5" onClick={() => handleSubmit("menunggu")}>
               <SaveIcon /> Ajukan Approval
             </Button>
             <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/kewaspadaan")}>

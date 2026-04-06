@@ -201,8 +201,7 @@ export default function PotensiKonflikList() {
         <DataTable
           columns={columns}
           data={paginated}
-          noDataMessage="Belum ada data potensi konflik."
-        />
+          emptyText="Belum ada data potensi konflik."        />
 
         {/* Pagination */}
         {totalPages > 1 && (
