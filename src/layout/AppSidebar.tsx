@@ -11,6 +11,7 @@ import {
   FolderIcon,
   PieChartIcon,
   AlertIcon,
+  BoltIcon,
 } from "../icons";
 
 interface NavItem {
@@ -69,6 +70,13 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Form Potensi Konflik", path: "/potensi-konflik" },
       { label: "EWS Potensi Konflik", path: "/ews/potensi-konflik" },
+    ],
+  },
+  {
+    label: "Pengaturan",
+    icon: <BoltIcon />,
+    items: [
+      { label: "General Setting", path: "/general-setting" },
     ],
   },
 ];

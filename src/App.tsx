@@ -37,6 +37,7 @@ import PotensiKonflikList from "./pages/potensi-konflik/PotensiKonflikList";
 import PotensiKonflikForm from "./pages/potensi-konflik/PotensiKonflikForm";
 import PotensiKonflikDetail from "./pages/potensi-konflik/PotensiKonflikDetail";
 import EWSPotensiKonflik from "./pages/potensi-konflik/EWSPotensiKonflik";
+import GeneralSettingList from "./pages/general-setting/GeneralSettingList";
 
 const basename = import.meta.env.VITE_BASE_PATH || "/";
 
@@ -98,6 +99,8 @@ export default function App() {
             <Route path="/potensi-konflik/edit/:id" element={<PotensiKonflikForm />} />
             <Route path="/potensi-konflik/:id" element={<PotensiKonflikDetail />} />
             <Route path="/ews/potensi-konflik" element={<EWSPotensiKonflik />} />
+            {/* General Setting */}
+            <Route path="/general-setting" element={<GeneralSettingList />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
