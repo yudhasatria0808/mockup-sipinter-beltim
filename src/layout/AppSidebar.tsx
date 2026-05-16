@@ -73,6 +73,30 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Peristiwa Konflik",
+    icon: <AlertIcon />,
+    items: [
+      { label: "Form Peristiwa Konflik", path: "/peristiwa-konflik" },
+      { label: "EWS Peristiwa Konflik", path: "/ews/peristiwa-konflik" },
+    ],
+  },
+  {
+    label: "Warga Negara Asing",
+    icon: <PlugInIcon />,
+    items: [
+      { label: "Form WNA", path: "/wna" },
+      { label: "EWS WNA", path: "/ews/wna" },
+    ],
+  },
+  {
+    label: "Tenaga Kerja Asing",
+    icon: <PlugInIcon />,
+    items: [
+      { label: "Form TKA", path: "/tka" },
+      { label: "EWS TKA", path: "/ews/tka" },
+    ],
+  },
+  {
     label: "Pengaturan",
     icon: <BoltIcon />,
     items: [

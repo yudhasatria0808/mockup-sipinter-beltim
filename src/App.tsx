@@ -37,6 +37,18 @@ import PotensiKonflikList from "./pages/potensi-konflik/PotensiKonflikList";
 import PotensiKonflikForm from "./pages/potensi-konflik/PotensiKonflikForm";
 import PotensiKonflikDetail from "./pages/potensi-konflik/PotensiKonflikDetail";
 import EWSPotensiKonflik from "./pages/potensi-konflik/EWSPotensiKonflik";
+import PeristiwaKonflikList from "./pages/peristiwa-konflik/PeristiwaKonflikList";
+import PeristiwaKonflikForm from "./pages/peristiwa-konflik/PeristiwaKonflikForm";
+import PeristiwaKonflikDetail from "./pages/peristiwa-konflik/PeristiwaKonflikDetail";
+import EWSPeristiwaKonflik from "./pages/peristiwa-konflik/EWSPeristiwaKonflik";
+import WNAList from "./pages/wna/WNAList";
+import WNAForm from "./pages/wna/WNAForm";
+import WNADetail from "./pages/wna/WNADetail";
+import EWSWna from "./pages/wna/EWSWna";
+import TKAList from "./pages/tka/TKAList";
+import TKAForm from "./pages/tka/TKAForm";
+import TKADetail from "./pages/tka/TKADetail";
+import EWSTka from "./pages/tka/EWSTka";
 import GeneralSettingList from "./pages/general-setting/GeneralSettingList";
 
 const basename = import.meta.env.VITE_BASE_PATH || "/";
@@ -99,6 +111,24 @@ export default function App() {
             <Route path="/potensi-konflik/edit/:id" element={<PotensiKonflikForm />} />
             <Route path="/potensi-konflik/:id" element={<PotensiKonflikDetail />} />
             <Route path="/ews/potensi-konflik" element={<EWSPotensiKonflik />} />
+            {/* Peristiwa Konflik */}
+            <Route path="/peristiwa-konflik" element={<PeristiwaKonflikList />} />
+            <Route path="/peristiwa-konflik/create" element={<PeristiwaKonflikForm />} />
+            <Route path="/peristiwa-konflik/edit/:id" element={<PeristiwaKonflikForm />} />
+            <Route path="/peristiwa-konflik/:id" element={<PeristiwaKonflikDetail />} />
+            <Route path="/ews/peristiwa-konflik" element={<EWSPeristiwaKonflik />} />
+            {/* Warga Negara Asing */}
+            <Route path="/wna" element={<WNAList />} />
+            <Route path="/wna/create" element={<WNAForm />} />
+            <Route path="/wna/edit/:id" element={<WNAForm />} />
+            <Route path="/wna/:id" element={<WNADetail />} />
+            <Route path="/ews/wna" element={<EWSWna />} />
+            {/* Tenaga Kerja Asing */}
+            <Route path="/tka" element={<TKAList />} />
+            <Route path="/tka/create" element={<TKAForm />} />
+            <Route path="/tka/edit/:id" element={<TKAForm />} />
+            <Route path="/tka/:id" element={<TKADetail />} />
+            <Route path="/ews/tka" element={<EWSTka />} />
             {/* General Setting */}
             <Route path="/general-setting" element={<GeneralSettingList />} />
           </Route>
