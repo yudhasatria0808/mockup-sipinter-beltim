@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
+import { useAuth, type UserRole } from "../context/AuthContext";
 import {
   HorizontaLDots,
   GridIcon,
@@ -23,12 +24,15 @@ interface NavGroup {
   label: string;
   icon: React.ReactNode;
   items: NavItem[];
+  /** Roles yang bisa melihat grup ini. Undefined = semua role bisa lihat */
+  roles?: UserRole[];
 }
 
 const navGroups: NavGroup[] = [
   {
     label: "Admin",
     icon: <BoxCubeIcon />,
+    roles: ["administrator"],
     items: [
       { label: "Dashboard", path: "/dashboard" },
       { label: "Roles", path: "/roles" },
@@ -39,6 +43,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Master Data",
     icon: <FolderIcon />,
+    roles: ["administrator"],
     items: [
       { label: "Aspek", path: "/aspek" },
       { label: "Jenis Konflik", path: "/jenis-konflik" },
@@ -49,6 +54,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Matriks Risiko",
     icon: <PieChartIcon />,
+    roles: ["administrator"],
     items: [
       { label: "Level Kemungkinan", path: "/risiko/kemungkinan" },
       { label: "Level Dampak", path: "/risiko/dampak" },
@@ -59,6 +65,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Kewaspadaan Dini",
     icon: <AlertIcon />,
+    roles: ["operator", "administrator"],
     items: [
       { label: "Form Kewaspadaan Dini", path: "/kewaspadaan" },
       { label: "EWS Dashboard", path: "/ews" },
@@ -67,6 +74,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Potensi Konflik",
     icon: <AlertIcon />,
+    roles: ["operator", "administrator"],
     items: [
       { label: "Form Potensi Konflik", path: "/potensi-konflik" },
       { label: "EWS Potensi Konflik", path: "/ews/potensi-konflik" },
@@ -75,6 +83,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Peristiwa Konflik",
     icon: <AlertIcon />,
+    roles: ["operator", "administrator"],
     items: [
       { label: "Form Peristiwa Konflik", path: "/peristiwa-konflik" },
       { label: "EWS Peristiwa Konflik", path: "/ews/peristiwa-konflik" },
@@ -83,6 +92,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Warga Negara Asing",
     icon: <PlugInIcon />,
+    roles: ["operator", "administrator"],
     items: [
       { label: "Form WNA", path: "/wna" },
       { label: "EWS WNA", path: "/ews/wna" },
@@ -91,14 +101,45 @@ const navGroups: NavGroup[] = [
   {
     label: "Tenaga Kerja Asing",
     icon: <PlugInIcon />,
+    roles: ["operator", "administrator"],
     items: [
       { label: "Form TKA", path: "/tka" },
       { label: "EWS TKA", path: "/ews/tka" },
     ],
   },
   {
+    label: "Monitoring & EWS",
+    icon: <PieChartIcon />,
+    roles: ["user"],
+    items: [
+      { label: "Dashboard", path: "/dashboard" },
+      { label: "EWS Kewaspadaan Dini", path: "/ews" },
+      { label: "EWS Potensi Konflik", path: "/ews/potensi-konflik" },
+      { label: "EWS Peristiwa Konflik", path: "/ews/peristiwa-konflik" },
+      { label: "EWS WNA", path: "/ews/wna" },
+      { label: "EWS TKA", path: "/ews/tka" },
+    ],
+  },
+  {
+    label: "Tindak Lanjut",
+    icon: <BoxCubeIcon />,
+    roles: ["user", "administrator"],
+    items: [
+      { label: "Keputusan & Tindak Lanjut", path: "/tindak-lanjut" },
+    ],
+  },
+  {
+    label: "Laporan & Notifikasi",
+    icon: <FolderIcon />,
+    items: [
+      { label: "Notifikasi", path: "/notifikasi" },
+      { label: "Laporan Periodik", path: "/laporan" },
+    ],
+  },
+  {
     label: "Pengaturan",
     icon: <BoltIcon />,
+    roles: ["administrator"],
     items: [
       { label: "General Setting", path: "/general-setting" },
     ],
@@ -107,8 +148,14 @@ const navGroups: NavGroup[] = [
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { user } = useAuth();
   const location = useLocation();
   const isExpand = isExpanded || isHovered || isMobileOpen;
+
+  // Filter nav groups berdasarkan role aktif
+  const visibleGroups = navGroups.filter(
+    (group) => !group.roles || group.roles.includes(user.role)
+  );
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(
     () => Object.fromEntries(navGroups.map((g) => [g.label, true]))
@@ -148,9 +195,17 @@ const AppSidebar: React.FC = () => {
         </Link>
       </div>
 
-      <div className="flex flex-col overflow-y-auto no-scrollbar h-[calc(100vh-88px)]">
+      {/* Role indicator */}
+      {isExpand && (
+        <div className="mb-3 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+          <p className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-semibold">Level Akses</p>
+          <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mt-0.5">{user.roleName}</p>
+        </div>
+      )}
+
+      <div className="flex flex-col overflow-y-auto no-scrollbar h-[calc(100vh-140px)]">
         <nav className="flex flex-col gap-0.5">
-          {navGroups.map((group) => {
+          {visibleGroups.map((group) => {
             const isOpen = openGroups[group.label];
             const groupActive = isGroupActive(group);
 

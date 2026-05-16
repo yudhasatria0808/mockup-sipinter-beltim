@@ -4,8 +4,9 @@ import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import { DataTable, type DataTableColumn } from "../../components/ui/table";
-import { PlusIcon, SearchIcon, EditIcon, TrashIcon } from "../../components/icons";
+import { PlusIcon, SearchIcon, EditIcon, TrashIcon, EyeIcon } from "../../components/icons";
 import roleService from "../../services/roleService";
+import userService from "../../services/userService";
 import type { Role } from "../../types/role";
 
 export default function RoleList() {
@@ -13,6 +14,7 @@ export default function RoleList() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [userCounts, setUserCounts] = useState<Record<string, number>>({});
   const [pagination, setPagination] = useState({
     pageNumber: 1,
     pageSize: 10,
@@ -34,6 +36,14 @@ export default function RoleList() {
         totalPages: response.totalPages,
         totalCount: response.totalCount,
       }));
+
+      // Fetch user counts per role
+      const usersResponse = await userService.getPaginated({ pageNumber: 1, pageSize: 100 });
+      const counts: Record<string, number> = {};
+      (usersResponse.data ?? []).forEach((u) => {
+        counts[u.roleId] = (counts[u.roleId] || 0) + 1;
+      });
+      setUserCounts(counts);
     } catch (error) {
       console.error("Failed to fetch roles:", error);
     } finally {
@@ -78,6 +88,17 @@ export default function RoleList() {
       key: "description",
       header: "Deskripsi",
       render: (item) => item.description || "-",
+    },
+    {
+      key: "userCount",
+      header: "Users",
+      headerClassName: "w-20",
+      className: "text-center",
+      render: (item) => (
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-brand-50 text-brand-700 dark:bg-brand-900/20 dark:text-brand-400">
+          {userCounts[item.id] || 0}
+        </span>
+      ),
     },
     {
       key: "status",
@@ -136,7 +157,14 @@ export default function RoleList() {
           actions={(item) => (
             <>
               <button
-                onClick={() => navigate(`/admin/roles/edit/${item.id}`)}
+                onClick={() => navigate(`/roles/${item.id}`)}
+                className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                title="Lihat Detail"
+              >
+                <EyeIcon />
+              </button>
+              <button
+                onClick={() => navigate(`/roles/edit/${item.id}`)}
                 className="p-1.5 rounded-md text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
                 title="Edit"
               >

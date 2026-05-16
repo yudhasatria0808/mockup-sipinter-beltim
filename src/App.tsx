@@ -10,6 +10,7 @@ import { AuthProvider } from "./context/AuthContext";
 import AdminDashboard from "./pages/Dashboard";
 import RoleList from "./pages/roles/RoleList";
 import RoleForm from "./pages/roles/RoleForm";
+import RoleDetail from "./pages/roles/RoleDetail";
 import UserList from "./pages/users/UserList";
 import UserForm from "./pages/users/UserForm";
 import UserResetPassword from "./pages/users/UserResetPassword";
@@ -50,6 +51,10 @@ import TKAForm from "./pages/tka/TKAForm";
 import TKADetail from "./pages/tka/TKADetail";
 import EWSTka from "./pages/tka/EWSTka";
 import GeneralSettingList from "./pages/general-setting/GeneralSettingList";
+import NotifikasiList from "./pages/notifikasi/NotifikasiList";
+import LaporanPeriodik from "./pages/laporan/LaporanPeriodik";
+import TindakLanjutList from "./pages/tindak-lanjut/TindakLanjutList";
+import TindakLanjutForm from "./pages/tindak-lanjut/TindakLanjutForm";
 
 const basename = import.meta.env.VITE_BASE_PATH || "/";
 
@@ -70,6 +75,7 @@ export default function App() {
             <Route path="/roles" element={<RoleList />} />
             <Route path="/roles/create" element={<RoleForm />} />
             <Route path="/roles/edit/:id" element={<RoleForm />} />
+            <Route path="/roles/:id" element={<RoleDetail />} />
             <Route path="/users" element={<UserList />} />
             <Route path="/users/create" element={<UserForm />} />
             <Route path="/users/edit/:id" element={<UserForm />} />
@@ -131,6 +137,13 @@ export default function App() {
             <Route path="/ews/tka" element={<EWSTka />} />
             {/* General Setting */}
             <Route path="/general-setting" element={<GeneralSettingList />} />
+            {/* Notifikasi */}
+            <Route path="/notifikasi" element={<NotifikasiList />} />
+            {/* Laporan Periodik */}
+            <Route path="/laporan" element={<LaporanPeriodik />} />
+            {/* Tindak Lanjut & Keputusan */}
+            <Route path="/tindak-lanjut" element={<TindakLanjutList />} />
+            <Route path="/tindak-lanjut/create" element={<TindakLanjutForm />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

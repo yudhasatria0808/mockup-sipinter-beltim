@@ -1,37 +1,63 @@
 // Auth Context - mockup mode, no API calls
+// Mendukung simulasi multi-level role: Operator, Administrator, User (Pimpinan)
 
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
+
+export type UserRole = "operator" | "administrator" | "user";
 
 interface MockUser {
   fullName: string;
   email: string;
   roleName: string;
+  role: UserRole;
 }
 
 interface AuthContextType {
   user: MockUser;
   logout: () => void;
+  switchRole: (role: UserRole) => void;
 }
 
-const mockUser: MockUser = {
-  fullName: 'Admin User',
-  email: 'admin@example.com',
-  roleName: 'Administrator',
+const roleProfiles: Record<UserRole, MockUser> = {
+  operator: {
+    fullName: "Budi Santoso",
+    email: "operator@sipintar.go.id",
+    roleName: "Operator",
+    role: "operator",
+  },
+  administrator: {
+    fullName: "Admin SIPINTAR",
+    email: "admin@sipintar.go.id",
+    roleName: "Administrator",
+    role: "administrator",
+  },
+  user: {
+    fullName: "Bupati Belitung Timur",
+    email: "pimpinan@sipintar.go.id",
+    roleName: "User (Pimpinan)",
+    role: "user",
+  },
 };
 
 const AuthContext = createContext<AuthContextType>({
-  user: mockUser,
+  user: roleProfiles.administrator,
   logout: () => {},
+  switchRole: () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [currentRole, setCurrentRole] = useState<UserRole>("administrator");
+
   const logout = () => {
-    // mockup: no-op
     window.location.href = '/signin';
   };
 
+  const switchRole = (role: UserRole) => {
+    setCurrentRole(role);
+  };
+
   return (
-    <AuthContext.Provider value={{ user: mockUser, logout }}>
+    <AuthContext.Provider value={{ user: roleProfiles[currentRole], logout, switchRole }}>
       {children}
     </AuthContext.Provider>
   );

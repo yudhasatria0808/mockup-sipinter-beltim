@@ -31,6 +31,7 @@ const emptyForm = {
   titikKoordinat: "",
   keterangan: "",
   sumberInformasi: "",
+  saranTindakLanjut: "",
 };
 
 export default function TKAForm() {
@@ -94,6 +95,7 @@ export default function TKAForm() {
     if (!form.kabupaten) e.kabupaten = "Kabupaten wajib diisi";
     if (!form.kecamatan) e.kecamatan = "Kecamatan wajib diisi";
     if (!form.desa) e.desa = "Desa wajib diisi";
+    if (!form.saranTindakLanjut.trim()) e.saranTindakLanjut = "Saran tindak lanjut wajib diisi";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -387,6 +389,19 @@ export default function TKAForm() {
               value={form.sumberInformasi}
               onChange={(e) => set("sumberInformasi", e.target.value)}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="saranTindakLanjut">Saran Tindak Lanjut <span className="text-error-500">*</span></Label>
+            <textarea
+              id="saranTindakLanjut"
+              rows={3}
+              placeholder="Saran tindak lanjut awal yang direkomendasikan operator..."
+              value={form.saranTindakLanjut}
+              onChange={(e) => set("saranTindakLanjut", e.target.value)}
+              className={fieldClass}
+            />
+            {errors.saranTindakLanjut && <p className="mt-1 text-xs text-error-500">{errors.saranTindakLanjut}</p>}
           </div>
         </div>
 

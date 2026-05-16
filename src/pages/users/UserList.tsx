@@ -168,14 +168,14 @@ export default function UserList() {
           actions={(item) => (
             <>
               <button
-                onClick={() => navigate(`/admin/users/edit/${item.id}`)}
+                onClick={() => navigate(`/users/edit/${item.id}`)}
                 className="p-1.5 rounded-md text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
                 title="Edit"
               >
                 <EditIcon />
               </button>
               <button
-                onClick={() => navigate(`/admin/users/reset-password/${item.id}`)}
+                onClick={() => navigate(`/users/reset-password/${item.id}`)}
                 className="p-1.5 rounded-md text-warning-500 hover:bg-warning-50 dark:hover:bg-warning-900/20 transition-colors"
                 title="Reset Password"
               >
