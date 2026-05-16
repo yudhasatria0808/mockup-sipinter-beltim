@@ -46,6 +46,7 @@ export interface WNA {
 
   // Sumber
   sumberInformasi: string;
+  saranTindakLanjut?: string;
 
   // Approval
   status: StatusApproval;

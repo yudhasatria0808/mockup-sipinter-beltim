@@ -66,6 +66,7 @@ export default function TKAForm() {
           titikKoordinat: found.titikKoordinat,
           keterangan: found.keterangan ?? "",
           sumberInformasi: found.sumberInformasi,
+          saranTindakLanjut: found.saranTindakLanjut ?? "",
         });
       } else {
         alert("Data tidak ditemukan");

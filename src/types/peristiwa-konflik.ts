@@ -34,6 +34,9 @@ export interface PeristiwaKonflik {
   sumberInformasi: string;
   keterangan?: string;
 
+  // Saran Tindak Lanjut
+  saranTindakLanjut?: string;
+
   // Tingkat Risiko
   tingkatRisiko: LevelRisikoLabel;
 

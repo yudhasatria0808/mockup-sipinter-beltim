@@ -73,6 +73,7 @@ export default function PeristiwaKonflikForm() {
           sumberInformasi: found.sumberInformasi,
           keterangan: found.keterangan ?? "",
           tingkatRisiko: found.tingkatRisiko,
+          saranTindakLanjut: found.saranTindakLanjut ?? "",
         });
       } else {
         alert("Data tidak ditemukan");

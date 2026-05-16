@@ -62,6 +62,7 @@ export default function WNAForm() {
           statusTinggal: found.statusTinggal,
           keterangan: found.keterangan ?? "",
           sumberInformasi: found.sumberInformasi,
+          saranTindakLanjut: found.saranTindakLanjut ?? "",
         });
       } else {
         alert("Data tidak ditemukan");

@@ -37,6 +37,7 @@ export interface TKA {
   // Keterangan & Sumber
   keterangan?: string;
   sumberInformasi: string;
+  saranTindakLanjut?: string;
 
   // Approval
   status: StatusApproval;
