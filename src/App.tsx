@@ -3,6 +3,7 @@ import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
 import AppLayout from "./layout/AppLayout";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -68,7 +69,8 @@ export default function App() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
 
-          {/* Main App */}
+          {/* Main App — Protected */}
+          <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<AdminDashboard />} />
@@ -144,6 +146,7 @@ export default function App() {
             {/* Tindak Lanjut & Keputusan */}
             <Route path="/tindak-lanjut" element={<TindakLanjutList />} />
             <Route path="/tindak-lanjut/create" element={<TindakLanjutForm />} />
+          </Route>
           </Route>
 
           <Route path="*" element={<NotFound />} />

@@ -184,14 +184,7 @@ const AppSidebar: React.FC = () => {
       {/* Logo */}
       <div className={`py-6 flex ${!isExpand ? "lg:justify-center" : "justify-start"}`}>
         <Link to="/" className="flex items-center gap-3">
-          {isExpand ? (
-            <>
-              <img className="h-8 dark:hidden" src="/images/logo/logo.svg" alt="Logo" />
-              <img className="hidden h-8 dark:block" src="/images/logo/logo-dark.svg" alt="Logo" />
-            </>
-          ) : (
-            <img className="h-8" src="/images/logo/logo-icon.svg" alt="Logo" />
-          )}
+          <img className="h-8" src="/images/logo/logo-beltim.png" alt="Logo Belitung Timur" />
         </Link>
       </div>
 

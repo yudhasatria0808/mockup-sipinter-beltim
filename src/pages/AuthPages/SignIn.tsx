@@ -1,13 +1,22 @@
+import { Navigate } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
 import AuthLayout from "./AuthPageLayout";
 import SignInForm from "../../components/auth/SignInForm";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SignIn() {
+  const { isAuthenticated } = useAuth();
+
+  // Jika sudah login, redirect ke dashboard
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <>
       <PageMeta
-        title="React.js SignIn Dashboard | TailAdmin - Next.js Admin Dashboard Template"
-        description="This is React.js SignIn Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="Sign In | SIPINTAR"
+        description="Sign in to SIPINTAR application"
       />
       <AuthLayout>
         <SignInForm />

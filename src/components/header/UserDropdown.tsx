@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { useAuth, type UserRole } from "../../context/AuthContext";
@@ -11,6 +12,7 @@ const roleOptions: { value: UserRole; label: string; color: string }[] = [
 
 export default function UserDropdown() {
   const { user, logout, switchRole } = useAuth();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
   const initials = user.fullName
@@ -97,7 +99,7 @@ export default function UserDropdown() {
         </ul>
 
         <button
-          onClick={logout}
+          onClick={() => { logout(); navigate("/signin"); }}
           className="flex items-center gap-3 px-3 py-2 font-medium text-gray-700 rounded-lg text-theme-sm hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5 w-full"
         >
           Sign out
