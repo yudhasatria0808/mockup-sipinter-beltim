@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
+import { PageHeader, ActionButton } from "../../components/common";
+import SelectField from "../../components/form/SelectField";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import { DataTable, type DataTableColumn } from "../../components/ui/table";
@@ -51,26 +53,13 @@ export default function TKAList() {
     setData((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Cek apakah IMTA sudah kadaluarsa
-  const isIMTAExpired = (tanggalBerakhir: string) =>
-    new Date(tanggalBerakhir) < new Date();
+  const isIMTAExpired = (tanggalBerakhir: string) => new Date(tanggalBerakhir) < new Date();
 
   const columns: DataTableColumn<TKA>[] = [
     {
-      key: "no",
-      header: "No",
-      headerClassName: "w-10",
-      render: (_, i) => (page - 1) * pageSize + i + 1,
-    },
-    {
       key: "periode",
       header: "Periode",
-      render: (row) =>
-        new Date(row.periode).toLocaleDateString("id-ID", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }),
+      render: (row) => new Date(row.periode).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
     },
     {
       key: "namaTKA",
@@ -119,9 +108,7 @@ export default function TKAList() {
       header: "Lokasi Kerja",
       render: (row) => (
         <span className="text-xs text-gray-600 dark:text-gray-400">
-          {row.desa}, {row.kecamatan}
-          <br />
-          <span className="text-gray-400">{row.kabupaten}</span>
+          {row.desa}, {row.kecamatan}<br /><span className="text-gray-400">{row.kabupaten}</span>
         </span>
       ),
     },
@@ -130,46 +117,8 @@ export default function TKAList() {
       header: "Status",
       render: (row) => {
         const s = statusBadge[row.status];
-        return (
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.className}`}>
-            {s.label}
-          </span>
-        );
+        return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span>;
       },
-    },
-    {
-      key: "actions",
-      header: "Aksi",
-      headerClassName: "text-right",
-      render: (row) => (
-        <div className="flex items-center justify-end gap-1">
-          <button
-            onClick={() => navigate(`/tka/${row.id}`)}
-            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-            title="Lihat Detail"
-          >
-            <EyeIcon />
-          </button>
-          {row.status === "draft" && (
-            <>
-              <button
-                onClick={() => navigate(`/tka/edit/${row.id}`)}
-                className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-                title="Edit"
-              >
-                <EditIcon />
-              </button>
-              <button
-                onClick={() => handleDelete(row.id)}
-                className="p-1.5 rounded-lg text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20"
-                title="Hapus"
-              >
-                <TrashIcon />
-              </button>
-            </>
-          )}
-        </div>
-      ),
     },
   ];
 
@@ -177,88 +126,55 @@ export default function TKAList() {
     <>
       <PageMeta title="Form Tenaga Kerja Asing" description="Daftar Data Tenaga Kerja Asing" />
       <div className="space-y-4">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">
-            Form Tenaga Kerja Asing (TKA)
-          </h2>
-          <Button size="sm" onClick={() => navigate("/tka/create")} className="gap-1.5">
-            <PlusIcon /> Tambah Data
-          </Button>
-        </div>
+        <PageHeader
+          title="Form Tenaga Kerja Asing (TKA)"
+          actions={
+            <Button size="sm" onClick={() => navigate("/tka/create")} className="gap-1.5">
+              <PlusIcon /> Tambah Data
+            </Button>
+          }
+        />
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <SearchIcon />
-            </span>
-            <Input
-              placeholder="Cari nama TKA, perusahaan, paspor, wilayah..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="pl-9"
-            />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><SearchIcon /></span>
+            <Input placeholder="Cari nama TKA, perusahaan, paspor, wilayah..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
           </div>
-          <select
-            value={filterIzin}
-            onChange={(e) => { setFilterIzin(e.target.value); setPage(1); }}
-            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="">Semua Jenis Izin Tinggal</option>
-            {jenisIzinTinggalOptions.map((v) => <option key={v} value={v}>{v}</option>)}
-          </select>
-          <select
+          <SelectField value={filterIzin} onChange={(v) => { setFilterIzin(v); setPage(1); }} options={jenisIzinTinggalOptions} placeholder="Semua Jenis Izin Tinggal" className="w-auto min-w-[180px]" />
+          <SelectField
             value={filterStatus}
-            onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="">Semua Status</option>
-            <option value="draft">Draft</option>
-            <option value="menunggu">Menunggu</option>
-            <option value="disetujui">Disetujui</option>
-            <option value="ditolak">Ditolak</option>
-          </select>
+            onChange={(v) => { setFilterStatus(v); setPage(1); }}
+            options={[
+              { value: "draft", label: "Draft" },
+              { value: "menunggu", label: "Menunggu" },
+              { value: "disetujui", label: "Disetujui" },
+              { value: "ditolak", label: "Ditolak" },
+            ]}
+            placeholder="Semua Status"
+            className="w-auto min-w-[150px]"
+          />
         </div>
 
         <DataTable
           columns={columns}
           data={paginated}
           emptyText="Belum ada data tenaga kerja asing."
+          pagination={{ pageNumber: page, pageSize, totalPages, totalCount: filtered.length }}
+          onPageChange={setPage}
+          rowKey={(item) => item.id}
+          actions={(item) => (
+            <>
+              <ActionButton onClick={() => navigate(`/tka/${item.id}`)} icon={<EyeIcon />} title="Lihat Detail" variant="info" />
+              {item.status === "draft" && (
+                <>
+                  <ActionButton onClick={() => navigate(`/tka/edit/${item.id}`)} icon={<EditIcon />} title="Edit" variant="primary" />
+                  <ActionButton onClick={() => handleDelete(item.id)} icon={<TrashIcon />} title="Hapus" variant="danger" />
+                </>
+              )}
+            </>
+          )}
         />
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>
-              Menampilkan {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} dari {filtered.length} data
-            </span>
-            <div className="flex gap-1">
-              <button
-                disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-700 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                ‹
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  className={`px-3 py-1 rounded-lg border ${p === page ? "bg-brand-500 text-white border-brand-500" : "border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"}`}
-                >
-                  {p}
-                </button>
-              ))}
-              <button
-                disabled={page === totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-700 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                ›
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );

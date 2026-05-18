@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
+import { PageHeader, ActionButton } from "../../components/common";
+import SelectField from "../../components/form/SelectField";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import { DataTable, type DataTableColumn } from "../../components/ui/table";
@@ -52,12 +54,6 @@ export default function KewaspadaanList() {
 
   const columns: DataTableColumn<KewaspadaanDini>[] = [
     {
-      key: "no",
-      header: "No",
-      headerClassName: "w-10",
-      render: (_, i) => (page - 1) * pageSize + i + 1,
-    },
-    {
       key: "periode",
       header: "Periode",
       render: (item) => new Date(item.periode).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
@@ -66,11 +62,7 @@ export default function KewaspadaanList() {
     {
       key: "wilayah",
       header: "Wilayah",
-      render: (item) => (
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          {item.desa}, {item.kecamatan}
-        </span>
-      ),
+      render: (item) => <span className="text-sm text-gray-600 dark:text-gray-400">{item.desa}, {item.kecamatan}</span>,
     },
     {
       key: "tingkatRisiko",
@@ -86,11 +78,7 @@ export default function KewaspadaanList() {
       header: "Status",
       render: (item) => {
         const s = statusBadge[item.status];
-        return (
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.className}`}>
-            {s.label}
-          </span>
-        );
+        return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span>;
       },
     },
     {
@@ -104,44 +92,33 @@ export default function KewaspadaanList() {
     <>
       <PageMeta title="Form Kewaspadaan Dini" description="Data Kewaspadaan Dini Daerah" />
       <div className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">
-            Form Kewaspadaan Dini
-          </h2>
-          <Button size="sm" onClick={() => navigate("/kewaspadaan/create")} className="gap-1.5">
-            <PlusIcon /> Tambah
-          </Button>
-        </div>
+        <PageHeader
+          title="Form Kewaspadaan Dini"
+          actions={
+            <Button size="sm" onClick={() => navigate("/kewaspadaan/create")} className="gap-1.5">
+              <PlusIcon /> Tambah
+            </Button>
+          }
+        />
 
         {/* Filters */}
         <div className="flex flex-wrap gap-2">
           <div className="flex-1 min-w-[180px] max-w-xs">
-            <Input
-              type="text"
-              placeholder="Cari aspek, wilayah..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            />
+            <Input type="text" placeholder="Cari aspek, wilayah..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
           </div>
-          <select
-            value={filterAspek}
-            onChange={(e) => { setFilterAspek(e.target.value); setPage(1); }}
-            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="">Semua Aspek</option>
-            {aspekOptions.map((a) => <option key={a} value={a}>{a}</option>)}
-          </select>
-          <select
+          <SelectField value={filterAspek} onChange={(v) => { setFilterAspek(v); setPage(1); }} options={aspekOptions} placeholder="Semua Aspek" className="w-auto min-w-[150px]" />
+          <SelectField
             value={filterStatus}
-            onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="">Semua Status</option>
-            <option value="draft">Draft</option>
-            <option value="menunggu">Menunggu</option>
-            <option value="disetujui">Disetujui</option>
-            <option value="ditolak">Ditolak</option>
-          </select>
+            onChange={(v) => { setFilterStatus(v); setPage(1); }}
+            options={[
+              { value: "draft", label: "Draft" },
+              { value: "menunggu", label: "Menunggu" },
+              { value: "disetujui", label: "Disetujui" },
+              { value: "ditolak", label: "Ditolak" },
+            ]}
+            placeholder="Semua Status"
+            className="w-auto min-w-[150px]"
+          />
           <Button
             type="button"
             variant="outline"
@@ -162,27 +139,9 @@ export default function KewaspadaanList() {
           rowKey={(item) => item.id}
           actions={(item) => (
             <>
-              <button
-                onClick={() => navigate(`/kewaspadaan/${item.id}`)}
-                className="p-1.5 rounded-md text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
-                title="Detail"
-              >
-                <EyeIcon />
-              </button>
-              <button
-                onClick={() => navigate(`/kewaspadaan/edit/${item.id}`)}
-                className="p-1.5 rounded-md text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
-                title="Edit"
-              >
-                <EditIcon />
-              </button>
-              <button
-                onClick={() => handleDelete(item.id)}
-                className="p-1.5 rounded-md text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 transition-colors"
-                title="Hapus"
-              >
-                <TrashIcon />
-              </button>
+              <ActionButton onClick={() => navigate(`/kewaspadaan/${item.id}`)} icon={<EyeIcon />} title="Detail" variant="info" />
+              <ActionButton onClick={() => navigate(`/kewaspadaan/edit/${item.id}`)} icon={<EditIcon />} title="Edit" variant="primary" />
+              <ActionButton onClick={() => handleDelete(item.id)} icon={<TrashIcon />} title="Hapus" variant="danger" />
             </>
           )}
         />

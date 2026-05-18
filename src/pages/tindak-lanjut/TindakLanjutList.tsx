@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
+import { PageHeader } from "../../components/common";
+import SelectField from "../../components/form/SelectField";
 import Button from "../../components/ui/button/Button";
 
 export type JenisKeputusan = "rapat_koordinasi" | "pengerahan_personil" | "tindakan_hukum" | "mediasi" | "lainnya";
@@ -142,43 +144,36 @@ export default function TindakLanjutList() {
     <>
       <PageMeta title="Tindak Lanjut & Keputusan" description="Pengambilan Keputusan dan Tindak Lanjut" />
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">
-              Tindak Lanjut & Pengambilan Keputusan
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              Keputusan intervensi oleh pimpinan (Rapat Forkopimda, Pengerahan Personil, Tindakan Hukum)
-            </p>
-          </div>
-          <Button size="sm" onClick={() => navigate("/tindak-lanjut/create")} className="gap-1.5">
-            + Tambah Keputusan
-          </Button>
-        </div>
+        <PageHeader
+          title="Tindak Lanjut & Pengambilan Keputusan"
+          description="Keputusan intervensi oleh pimpinan (Rapat Forkopimda, Pengerahan Personil, Tindakan Hukum)"
+          actions={
+            <Button size="sm" onClick={() => navigate("/tindak-lanjut/create")} className="gap-1.5">
+              + Tambah Keputusan
+            </Button>
+          }
+        />
 
         {/* Filters */}
         <div className="flex flex-wrap gap-2">
-          <select
+          <SelectField
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as StatusTindakLanjut | "")}
-            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-          >
-            <option value="">Semua Status</option>
-            <option value="menunggu_keputusan">Menunggu Keputusan</option>
-            <option value="dalam_proses">Dalam Proses</option>
-            <option value="selesai">Selesai</option>
-          </select>
-          <select
+            onChange={(v) => setFilterStatus(v as StatusTindakLanjut | "")}
+            options={[
+              { value: "menunggu_keputusan", label: "Menunggu Keputusan" },
+              { value: "dalam_proses", label: "Dalam Proses" },
+              { value: "selesai", label: "Selesai" },
+            ]}
+            placeholder="Semua Status"
+            className="w-auto min-w-[170px]"
+          />
+          <SelectField
             value={filterJenis}
-            onChange={(e) => setFilterJenis(e.target.value as JenisKeputusan | "")}
-            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-          >
-            <option value="">Semua Jenis Keputusan</option>
-            {Object.entries(jenisKeputusanLabel).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
+            onChange={(v) => setFilterJenis(v as JenisKeputusan | "")}
+            options={Object.entries(jenisKeputusanLabel).map(([k, v]) => ({ value: k, label: v }))}
+            placeholder="Semua Jenis Keputusan"
+            className="w-auto min-w-[200px]"
+          />
         </div>
 
         {/* Cards */}
