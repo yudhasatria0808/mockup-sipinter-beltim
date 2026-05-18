@@ -10,12 +10,12 @@ type BadgeColor =
   | "dark";
 
 interface BadgeProps {
-  variant?: BadgeVariant; // Light or solid variant
-  size?: BadgeSize; // Badge size
-  color?: BadgeColor; // Badge color
-  startIcon?: React.ReactNode; // Icon at the start
-  endIcon?: React.ReactNode; // Icon at the end
-  children: React.ReactNode; // Badge content
+  variant?: BadgeVariant;
+  size?: BadgeSize;
+  color?: BadgeColor;
+  startIcon?: React.ReactNode;
+  endIcon?: React.ReactNode;
+  children: React.ReactNode;
 }
 
 const Badge: React.FC<BadgeProps> = ({
@@ -27,41 +27,38 @@ const Badge: React.FC<BadgeProps> = ({
   children,
 }) => {
   const baseStyles =
-    "inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium";
+    "inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-lg font-medium";
 
-  // Define size styles
   const sizeStyles = {
-    sm: "text-theme-xs", // Smaller padding and font size
-    md: "text-sm", // Default padding and font size
+    sm: "text-theme-xs",
+    md: "text-sm",
   };
 
-  // Define color styles for variants
   const variants = {
     light: {
       primary:
-        "bg-brand-50 text-brand-500 dark:bg-brand-500/15 dark:text-brand-400",
+        "bg-brand-50 text-brand-600 ring-1 ring-brand-200/50 dark:bg-brand-500/15 dark:text-brand-400 dark:ring-brand-500/20",
       success:
-        "bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500",
+        "bg-success-50 text-success-700 ring-1 ring-success-200/50 dark:bg-success-500/15 dark:text-success-400 dark:ring-success-500/20",
       error:
-        "bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500",
+        "bg-error-50 text-error-700 ring-1 ring-error-200/50 dark:bg-error-500/15 dark:text-error-400 dark:ring-error-500/20",
       warning:
-        "bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-orange-400",
-      info: "bg-blue-light-50 text-blue-light-500 dark:bg-blue-light-500/15 dark:text-blue-light-500",
-      light: "bg-gray-100 text-gray-700 dark:bg-white/5 dark:text-white/80",
+        "bg-warning-50 text-warning-700 ring-1 ring-warning-200/50 dark:bg-warning-500/15 dark:text-orange-400 dark:ring-warning-500/20",
+      info: "bg-blue-light-50 text-blue-light-600 ring-1 ring-blue-light-200/50 dark:bg-blue-light-500/15 dark:text-blue-light-400 dark:ring-blue-light-500/20",
+      light: "bg-gray-100 text-gray-700 ring-1 ring-gray-200/50 dark:bg-white/5 dark:text-white/80 dark:ring-white/10",
       dark: "bg-gray-500 text-white dark:bg-white/5 dark:text-white",
     },
     solid: {
-      primary: "bg-brand-500 text-white dark:text-white",
-      success: "bg-success-500 text-white dark:text-white",
-      error: "bg-error-500 text-white dark:text-white",
-      warning: "bg-warning-500 text-white dark:text-white",
-      info: "bg-blue-light-500 text-white dark:text-white",
+      primary: "bg-gradient-to-b from-brand-500 to-brand-600 text-white shadow-sm shadow-brand-500/20",
+      success: "bg-gradient-to-b from-success-500 to-success-600 text-white shadow-sm shadow-success-500/20",
+      error: "bg-gradient-to-b from-error-500 to-error-600 text-white shadow-sm shadow-error-500/20",
+      warning: "bg-gradient-to-b from-warning-500 to-warning-600 text-white shadow-sm shadow-warning-500/20",
+      info: "bg-gradient-to-b from-blue-light-500 to-blue-light-600 text-white shadow-sm shadow-blue-light-500/20",
       light: "bg-gray-400 dark:bg-white/5 text-white dark:text-white/80",
       dark: "bg-gray-700 text-white dark:text-white",
     },
   };
 
-  // Get styles based on size and color variant
   const sizeClass = sizeStyles[size];
   const colorStyles = variants[variant][color];
 

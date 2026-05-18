@@ -24,7 +24,6 @@ interface NavGroup {
   label: string;
   icon: React.ReactNode;
   items: NavItem[];
-  /** Roles yang bisa melihat grup ini. Undefined = semua role bisa lihat */
   roles?: UserRole[];
 }
 
@@ -152,7 +151,6 @@ const AppSidebar: React.FC = () => {
   const location = useLocation();
   const isExpand = isExpanded || isHovered || isMobileOpen;
 
-  // Filter nav groups berdasarkan role aktif
   const visibleGroups = navGroups.filter(
     (group) => !group.roles || group.roles.includes(user.role)
   );
@@ -174,7 +172,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed top-0 left-0 px-5 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 h-screen transition-all duration-300 ease-in-out z-50
+      className={`fixed top-0 left-0 px-4 h-screen transition-all duration-300 ease-in-out z-50 border-r border-primary-100/60 bg-gradient-to-b from-white via-primary-25/50 to-primary-50/30 dark:border-gray-800 dark:from-gray-900 dark:via-gray-900 dark:to-primary-950/30
         ${isExpand ? "w-[290px]" : "w-[90px]"}
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
@@ -185,14 +183,17 @@ const AppSidebar: React.FC = () => {
       <div className={`py-6 flex ${!isExpand ? "lg:justify-center" : "justify-start"}`}>
         <Link to="/" className="flex items-center gap-3">
           <img className="h-8" src="/images/logo/logo-beltim.png" alt="Logo Belitung Timur" />
+          {isExpand && (
+            <span className="text-sm font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent dark:from-primary-300 dark:to-primary-500">SIPINTAR</span>
+          )}
         </Link>
       </div>
 
       {/* Role indicator */}
       {isExpand && (
-        <div className="mb-3 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
-          <p className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-semibold">Level Akses</p>
-          <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mt-0.5">{user.roleName}</p>
+        <div className="mb-4 rounded-xl bg-gradient-to-r from-primary-50 to-primary-25 px-3 py-2.5 dark:from-primary-500/10 dark:to-primary-500/5 border border-primary-100/50 dark:border-primary-500/10">
+          <p className="text-[10px] uppercase tracking-wider text-primary-500/80 dark:text-primary-400/70 font-semibold">Level Akses</p>
+          <p className="text-xs font-semibold text-primary-800 dark:text-primary-300 mt-0.5">{user.roleName}</p>
         </div>
       )}
 
@@ -208,16 +209,16 @@ const AppSidebar: React.FC = () => {
                 <button
                   onClick={() => toggleGroup(group.label)}
                   title={!isExpand ? group.label : undefined}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 cursor-pointer
                     ${groupActive
-                      ? "text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20"
-                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
+                      ? "text-primary-700 dark:text-primary-400 bg-primary-50/70 dark:bg-primary-500/10 shadow-sm shadow-primary-100/50 dark:shadow-none"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-primary-25/60 dark:hover:bg-gray-800/50 hover:text-gray-800 dark:hover:text-gray-200"
                     }
                     ${!isExpand ? "lg:justify-center" : "justify-between"}
                   `}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className={`shrink-0 size-5 ${groupActive ? "text-brand-500" : ""}`}>
+                    <span className={`shrink-0 size-5 ${groupActive ? "text-primary-600 dark:text-primary-400" : ""}`}>
                       {group.icon}
                     </span>
                     {isExpand && (
@@ -249,20 +250,24 @@ const AppSidebar: React.FC = () => {
                     isOpen || !isExpand ? "max-h-96 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
                   }`}
                 >
-                  <ul className={`flex flex-col gap-1 ${isExpand ? "pl-3 mt-1 mb-2" : "mb-2"}`}>
+                  <ul className={`flex flex-col gap-0.5 ${isExpand ? "pl-3 mt-1 mb-2" : "mb-2"}`}>
                     {group.items.map((item) => {
                       const active = isActive(item.path);
                       return (
                         <li key={item.path}>
                           <Link
                             to={item.path}
-                            className={`menu-item group ${active ? "menu-item-active" : "menu-item-inactive"}`}
+                            className={`relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm transition-all duration-200 group
+                              ${active
+                                ? "bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-md shadow-primary-600/25 dark:from-primary-600 dark:to-primary-800 dark:shadow-primary-600/15"
+                                : "text-gray-600 hover:bg-primary-50/60 hover:text-primary-800 dark:text-gray-400 dark:hover:bg-primary-500/5 dark:hover:text-primary-300"
+                              }`}
                           >
-                            <span className={`menu-item-icon-size ${active ? "menu-item-icon-active" : "menu-item-icon-inactive"}`}>
+                            <span className={`shrink-0 ${active ? "text-white/80" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"}`}>
                               {item.path === "/dashboard" ? <PlugInIcon /> : <GridIcon />}
                             </span>
                             {isExpand && (
-                              <span className="menu-item-text">{item.label}</span>
+                              <span className="truncate">{item.label}</span>
                             )}
                           </Link>
                         </li>

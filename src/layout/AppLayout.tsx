@@ -8,7 +8,7 @@ const AppLayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
   return (
-    <div className="min-h-screen xl:flex">
+    <div className="min-h-screen xl:flex bg-gradient-to-br from-blue-light-100/70 via-primary-100/50 to-primary-50/70 dark:from-gray-950 dark:via-primary-950/30 dark:to-gray-950">
       <AppSidebar />
       <Backdrop />
       <div

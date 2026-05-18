@@ -10,9 +10,9 @@ export default function AuthLayout({
     <div className="relative min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-brand-500/10 blur-3xl dark:bg-brand-500/5" />
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-brand-600/10 blur-3xl dark:bg-brand-600/5" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-brand-400/5 blur-3xl dark:bg-brand-400/3" />
+        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-primary-500/10 blur-3xl dark:bg-primary-500/5" />
+        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-primary-600/10 blur-3xl dark:bg-primary-600/5" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-primary-400/5 blur-3xl dark:bg-primary-400/3" />
       </div>
 
       <div className="relative flex min-h-screen flex-col lg:flex-row">
@@ -23,8 +23,8 @@ export default function AuthLayout({
 
         {/* Right side - Branding panel */}
         <div className="hidden lg:flex lg:w-[45%] items-center justify-center relative overflow-hidden">
-          {/* Gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900 dark:from-brand-800 dark:via-brand-900 dark:to-gray-900" />
+          {/* Gradient background - hijau khas logo */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 dark:from-primary-800 dark:via-primary-900 dark:to-gray-900" />
           
           {/* Animated pattern overlay */}
           <div className="absolute inset-0 opacity-10">
@@ -54,7 +54,7 @@ export default function AuthLayout({
               Sistem Informasi Perencanaan dan Penganggaran Terpadu Daerah
             </p> */}
             <div className="mt-8 flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm ring-1 ring-white/20">
-              <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+              <div className="h-2 w-2 rounded-full bg-gold-400 animate-pulse" />
               <span className="text-sm text-white/80">Kabupaten Belitung Timur</span>
             </div>
           </div>

@@ -131,14 +131,19 @@ export default function UserList() {
   return (
     <>
       <PageMeta title="Admin | User Management" description="Kelola User" />
-      <div className="space-y-4">
+      <div className="animate-fade-in-up space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">
-            User Management
-          </h2>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              User Management
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              Kelola pengguna dan hak akses sistem
+            </p>
+          </div>
           <Button size="sm" onClick={() => navigate("/users/create")} className="gap-1.5">
-            <PlusIcon /> Tambah
+            <PlusIcon /> Tambah User
           </Button>
         </div>
 

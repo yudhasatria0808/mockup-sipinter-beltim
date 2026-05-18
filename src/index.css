@@ -54,6 +54,32 @@ layer(base);
   --color-brand-900: #262e89;
   --color-brand-950: #161950;
 
+  /* Hijau khas logo Belitung Timur */
+  --color-primary-25: #f3faf6;
+  --color-primary-50: #e8f5ee;
+  --color-primary-100: #c8e6d5;
+  --color-primary-200: #a3d4b8;
+  --color-primary-300: #6fbd93;
+  --color-primary-400: #4aab78;
+  --color-primary-500: #2e7d52;
+  --color-primary-600: #256b45;
+  --color-primary-700: #1d5838;
+  --color-primary-800: #16462c;
+  --color-primary-900: #0f3520;
+  --color-primary-950: #082315;
+
+  /* Emas aksen logo */
+  --color-gold-50: #fefce8;
+  --color-gold-100: #fef9c3;
+  --color-gold-200: #fef08a;
+  --color-gold-300: #fde047;
+  --color-gold-400: #facc15;
+  --color-gold-500: #d4a017;
+  --color-gold-600: #b8860b;
+  --color-gold-700: #92690a;
+  --color-gold-800: #6b4d0a;
+  --color-gold-900: #4a3508;
+
   --color-blue-light-25: #f5fbff;
   --color-blue-light-50: #f0f9ff;
   --color-blue-light-100: #e0f2fe;
@@ -216,6 +242,93 @@ layer(base);
 
 .animate-shimmer {
   animation: shimmer 2s infinite;
+}
+
+/* Fade in up animation for page content */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+/* Staggered children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 360ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 420ms; }
+
+/* Subtle scale on hover for cards */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(16, 24, 40, 0.1), 0 4px 10px -3px rgba(16, 24, 40, 0.05);
+}
+.dark .hover-lift:hover {
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3), 0 4px 10px -3px rgba(0, 0, 0, 0.2);
+}
+
+/* Gradient border effect */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 9999px 9999px 0 0;
+  background: linear-gradient(90deg, var(--color-brand-400), var(--color-brand-600));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.gradient-border:hover::before {
+  opacity: 1;
+}
+
+/* Glass card effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.dark .glass-card {
+  background: rgba(29, 41, 57, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Pulse glow for important elements */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(70, 95, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(70, 95, 255, 0);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
 }
 
 @utility menu-item {
