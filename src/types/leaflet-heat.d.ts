@@ -1,3 +1,5 @@
+import "leaflet";
+
 declare module "leaflet" {
   interface HeatLayerOptions {
     minOpacity?: number;
@@ -8,7 +10,7 @@ declare module "leaflet" {
     gradient?: Record<number, string>;
   }
 
-  interface HeatLayer extends L.Layer {
+  interface HeatLayer extends Layer {
     setLatLngs(latlngs: Array<[number, number, number?]>): this;
     addLatLng(latlng: [number, number, number?]): this;
     setOptions(options: HeatLayerOptions): this;
