@@ -96,7 +96,7 @@ export default function KewaspadaanForm() {
       ["kemungkinanDeskripsi", "Deskripsi Kemungkinan Ancaman"],
       ["dampakLevel", "Level Prediksi Dampak"],
       ["dampakDeskripsi", "Deskripsi Prediksi Dampak"],
-      ["rekomendasi", "Rekomendasi"],
+      ["rekomendasi", "Saran & Tindak Lanjut"],
     ];
     required.forEach(([k, label]) => {
       if (!form[k as keyof typeof form]?.trim()) errs[k] = `${label} wajib diisi`;
@@ -217,8 +217,8 @@ export default function KewaspadaanForm() {
               </div>
             </div>
 
-            <FormField label="Rekomendasi" required error={errors.rekomendasi}>
-              <textarea rows={3} placeholder="Rekomendasi tindakan..." value={form.rekomendasi} onChange={(e) => set("rekomendasi", e.target.value)} className={textareaClass} />
+            <FormField label="Saran & Tindak Lanjut" required error={errors.rekomendasi}>
+              <textarea rows={3} placeholder="Saran & tindak lanjut..." value={form.rekomendasi} onChange={(e) => set("rekomendasi", e.target.value)} className={textareaClass} />
             </FormField>
 
             {/* Tingkat Risiko kalkulasi */}

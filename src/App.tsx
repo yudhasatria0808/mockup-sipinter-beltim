@@ -6,6 +6,7 @@ import AppLayout from "./layout/AppLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import { AuthProvider } from "./context/AuthContext";
+import { ColorPaletteProvider } from "./context/ColorPaletteContext";
 
 // Admin pages
 import AdminDashboard from "./pages/Dashboard";
@@ -52,6 +53,7 @@ import TKAForm from "./pages/tka/TKAForm";
 import TKADetail from "./pages/tka/TKADetail";
 import EWSTka from "./pages/tka/EWSTka";
 import GeneralSettingList from "./pages/general-setting/GeneralSettingList";
+import PengaturanTampilan from "./pages/pengaturan-tampilan/PengaturanTampilan";
 import NotifikasiList from "./pages/notifikasi/NotifikasiList";
 import LaporanPeriodik from "./pages/laporan/LaporanPeriodik";
 import TindakLanjutList from "./pages/tindak-lanjut/TindakLanjutList";
@@ -64,6 +66,7 @@ export default function App() {
     <Router basename={basename}>
       <ScrollToTop />
       <AuthProvider>
+        <ColorPaletteProvider>
         <Routes>
           {/* Auth */}
           <Route path="/signin" element={<SignIn />} />
@@ -139,6 +142,8 @@ export default function App() {
             <Route path="/ews/tka" element={<EWSTka />} />
             {/* General Setting */}
             <Route path="/general-setting" element={<GeneralSettingList />} />
+            {/* Pengaturan Tampilan */}
+            <Route path="/pengaturan-tampilan" element={<PengaturanTampilan />} />
             {/* Notifikasi */}
             <Route path="/notifikasi" element={<NotifikasiList />} />
             {/* Laporan Periodik */}
@@ -151,6 +156,7 @@ export default function App() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </ColorPaletteProvider>
       </AuthProvider>
     </Router>
   );

@@ -97,7 +97,7 @@ export default function PotensiKonflikForm() {
     if (!form.namaPotensiKonflik) e.namaPotensiKonflik = "Nama potensi konflik wajib diisi";
     if (!form.kemungkinanLevel) e.kemungkinanLevel = "Level kemungkinan wajib dipilih";
     if (!form.dampakLevel) e.dampakLevel = "Level dampak wajib dipilih";
-    if (!form.rekomendasi.trim()) e.rekomendasi = "Rekomendasi/saran tindak lanjut wajib diisi";
+    if (!form.rekomendasi.trim()) e.rekomendasi = "Saran & tindak lanjut wajib diisi";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -385,11 +385,11 @@ export default function PotensiKonflikForm() {
           </div>
 
           <div>
-            <Label htmlFor="rekomendasi">Rekomendasi / Saran Tindak Lanjut <span className="text-error-500">*</span></Label>
+            <Label htmlFor="rekomendasi">Saran & Tindak Lanjut <span className="text-error-500">*</span></Label>
             <textarea
               id="rekomendasi"
               rows={3}
-              placeholder="Rekomendasi tindak lanjut..."
+              placeholder="Saran & tindak lanjut..."
               value={form.rekomendasi}
               onChange={(e) => set("rekomendasi", e.target.value)}
               className={fieldClass}

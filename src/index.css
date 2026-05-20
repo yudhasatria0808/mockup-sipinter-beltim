@@ -54,19 +54,19 @@ layer(base);
   --color-brand-900: #262e89;
   --color-brand-950: #161950;
 
-  /* Hijau khas logo Belitung Timur */
-  --color-primary-25: #f3faf6;
-  --color-primary-50: #e8f5ee;
-  --color-primary-100: #c8e6d5;
-  --color-primary-200: #a3d4b8;
-  --color-primary-300: #6fbd93;
-  --color-primary-400: #4aab78;
-  --color-primary-500: #2e7d52;
-  --color-primary-600: #256b45;
-  --color-primary-700: #1d5838;
-  --color-primary-800: #16462c;
-  --color-primary-900: #0f3520;
-  --color-primary-950: #082315;
+  /* Merah dominan - true red, bukan pink */
+  --color-primary-25: #fef6f5;
+  --color-primary-50: #fceae8;
+  --color-primary-100: #f8cdc9;
+  --color-primary-200: #f0a29b;
+  --color-primary-300: #e06b60;
+  --color-primary-400: #d44538;
+  --color-primary-500: #b91c1c;
+  --color-primary-600: #9b1818;
+  --color-primary-700: #7f1414;
+  --color-primary-800: #641010;
+  --color-primary-900: #4a0c0c;
+  --color-primary-950: #300808;
 
   /* Emas aksen logo */
   --color-gold-50: #fefce8;
@@ -930,4 +930,41 @@ span.flatpickr-weekday,
 
 .simplebar-scrollbar.simplebar-visible:before {
   @apply opacity-100;
+}
+
+/* Leaflet kecamatan label tooltip */
+.kecamatan-label-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #374151;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-shadow: 
+    1px 1px 2px rgba(255, 255, 255, 0.9),
+    -1px -1px 2px rgba(255, 255, 255, 0.9),
+    1px -1px 2px rgba(255, 255, 255, 0.9),
+    -1px 1px 2px rgba(255, 255, 255, 0.9);
+}
+.kecamatan-label-tooltip::before {
+  display: none !important;
+}
+
+/* Leaflet popup styling */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -3px rgba(0, 0, 0, 0.05) !important;
+}
+.leaflet-popup-tip {
+  box-shadow: none !important;
+}
+
+/* Fullscreen map styling */
+div:fullscreen {
+  background: white;
+}
+.dark div:fullscreen {
+  background: #1f2937;
 }

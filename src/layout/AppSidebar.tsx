@@ -141,6 +141,7 @@ const navGroups: NavGroup[] = [
     roles: ["administrator"],
     items: [
       { label: "General Setting", path: "/general-setting" },
+      { label: "Pengaturan Tampilan", path: "/pengaturan-tampilan" },
     ],
   },
 ];

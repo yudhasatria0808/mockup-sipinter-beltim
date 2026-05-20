@@ -174,7 +174,7 @@ export default function PotensiKonflikDetail() {
           />
           <Row label="Upaya Penanganan" value={data.upayaPenanganan} />
           <Row label="Keterangan Detail" value={data.keteranganDetail} />
-          <Row label="Rekomendasi" value={data.rekomendasi} />
+          <Row label="Saran & Tindak Lanjut" value={data.rekomendasi} />
           <Row
             label="Tingkat Risiko"
             value={

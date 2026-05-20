@@ -155,7 +155,7 @@ export default function KewaspadaanDetail() {
               </div>
             }
           />
-          <Row label="Rekomendasi" value={data.rekomendasi} />
+          <Row label="Saran & Tindak Lanjut" value={data.rekomendasi} />
           <Row
             label="Tingkat Risiko"
             value={

@@ -32,7 +32,7 @@ export default function AdminDashboard() {
         <DashboardStats />
 
         {/* Map & Heatmap */}
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6">
           {/* Peta Belitung Timur */}
           <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-gray-800 dark:bg-gray-900/80 dark:shadow-none">
             <div className="mb-4 flex items-center gap-3">

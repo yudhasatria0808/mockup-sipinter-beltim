@@ -70,7 +70,7 @@ function AlertCard({ item, onClick }: { item: KewaspadaanDini; onClick: () => vo
         </span>
       </div>
       <p className="mt-2 text-xs text-gray-600 dark:text-gray-400 line-clamp-1">
-        <span className="font-medium">Rekomendasi:</span> {item.rekomendasi}
+        <span className="font-medium">Saran & Tindak Lanjut:</span> {item.rekomendasi}
       </p>
     </button>
   );
