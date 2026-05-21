@@ -3,7 +3,7 @@ import type { PaginatedResponse } from '../types';
 import type { TKA } from '../types/tka';
 
 interface PaginatedParams {
-  generalSearch?: string; kewarganegaraan?: string; status?: string;
+  generalSearch?: string; kewarganegaraan?: string; jenisIzinTinggal?: string; status?: string;
   pageNumber: number; pageSize: number;
 }
 
@@ -12,6 +12,7 @@ export const tkaService = {
     const params = new URLSearchParams();
     if (req.generalSearch) params.append('generalSearch', req.generalSearch);
     if (req.kewarganegaraan) params.append('kewarganegaraan', req.kewarganegaraan);
+    if (req.jenisIzinTinggal) params.append('jenisIzinTinggal', req.jenisIzinTinggal);
     if (req.status) params.append('status', req.status);
     params.append('pageNumber', req.pageNumber.toString());
     params.append('pageSize', req.pageSize.toString());

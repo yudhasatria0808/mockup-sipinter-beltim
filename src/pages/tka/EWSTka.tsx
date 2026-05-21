@@ -140,14 +140,16 @@ export default function EWSTka() {
     (d) => new Date(d.tanggalBerakhirIMTA) < new Date()
   ).length;
 
-  const nearExpiryCount = approved.filter((d) => {
+  const nearExpiryCount = items.filter((d) => {
     const sisa = Math.ceil(
       (new Date(d.tanggalBerakhirIMTA).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
     );
     return sisa > 0 && sisa <= 30;
   }).length;
 
-  const negaraList = [...new Set(approved.map((d) => d.kewarganegaraan))];
+  const negaraList = [...new Set(items.map((d: TKA) => d.kewarganegaraan))];
+
+  if (loading) return <div className="flex items-center justify-center py-16"><div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" /></div>;
 
   return (
     <>
@@ -183,7 +185,7 @@ export default function EWSTka() {
         {/* Ringkasan tambahan */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
-            <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">{approved.length}</p>
+            <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">{items.length}</p>
             <p className="text-xs mt-0.5 text-gray-500">Total TKA Terdaftar</p>
           </div>
           <div className="rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-900/20 p-4">
@@ -214,12 +216,12 @@ export default function EWSTka() {
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Distribusi Jenis Izin Tinggal
             </span>
-            <span className="text-xs text-gray-400">{approved.length} total data disetujui</span>
+            <span className="text-xs text-gray-400">{items.length} total data disetujui</span>
           </div>
           <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
             {izinOrder.map((izin) => {
               const count = countByIzin(izin);
-              const pct = approved.length > 0 ? (count / approved.length) * 100 : 0;
+              const pct = items.length > 0 ? (count / items.length) * 100 : 0;
               if (pct === 0) return null;
               return (
                 <div
@@ -244,14 +246,6 @@ export default function EWSTka() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
           <select
-            value={filterIzin}
-            onChange={(e) => setFilterIzin(e.target.value as JenisIzinTinggal | "")}
-            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="">Semua Jenis Izin Tinggal</option>
-            {izinOrder.map((v) => <option key={v} value={v}>{v}</option>)}
-          </select>
-          <select
             value={filterKewarganegaraan}
             onChange={(e) => setFilterKewarganegaraan(e.target.value)}
             className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -259,13 +253,6 @@ export default function EWSTka() {
             <option value="">Semua Kewarganegaraan</option>
             {negaraList.map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
-          <input
-            type="text"
-            placeholder="Filter wilayah (kabupaten/kecamatan)..."
-            value={filterWilayah}
-            onChange={(e) => setFilterWilayah(e.target.value)}
-            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 min-w-56"
-          />
         </div>
 
         {/* TKA Cards grouped by jenis izin tinggal */}

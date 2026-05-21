@@ -20,7 +20,7 @@ export const wnaService = {
     const res = await api.get(`/api/wna?${params.toString()}`);
     return res.data;
   },
-  async getEWS(kewarganegaraan?: string): Promise<{ stats: unknown; items: WNA[] }> {
+  async getEWS(kewarganegaraan?: string): Promise<{ stats: { total: number; byStatusTinggal: { aktif: number; keluar: number; habisIzin: number; lainnya: number }; byKewarganegaraan: { kewarganegaraan: string; count: number }[] }; items: WNA[] }> {
     const params = new URLSearchParams();
     if (kewarganegaraan) params.append('kewarganegaraan', kewarganegaraan);
     const res = await api.get(`/api/wna/ews?${params.toString()}`);
@@ -30,7 +30,7 @@ export const wnaService = {
     const res = await api.get(`/api/wna/${id}`);
     return res.data.data;
   },
-  async create(data: Omit<WNA, 'id' | 'createdBy' | 'createdAt' | 'approvedBy' | 'approvedAt' | 'catatanApproval'>): Promise<WNA> {
+  async create(data: Record<string, unknown>): Promise<WNA> {
     const res = await api.post('/api/wna', data);
     return res.data.data;
   },

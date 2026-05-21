@@ -265,6 +265,7 @@ export default function TKADetail() {
               </Button>
               <Button
                 size="sm"
+                disabled={approving}
                 onClick={handleApproval}
                 className={approvalAction === "disetujui" ? "bg-success-500 hover:bg-success-600" : "bg-error-500 hover:bg-error-600"}
               >

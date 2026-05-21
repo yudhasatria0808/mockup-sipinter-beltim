@@ -3,16 +3,16 @@ import type { PaginatedResponse } from '../types';
 import type { Aspek } from '../types/aspek';
 import type { JenisKonflik } from '../types/jenisKonflik';
 import type { Instansi } from '../types/instansi';
-import type { Wilayah } from '../types/wilayah';
-import type { LevelKemungkinan, LevelDampak, LevelRisiko, MatriksRisiko } from '../types/risiko-matriks';
+import type { LevelKemungkinan, LevelDampak, LevelRisiko } from '../types/risiko-matriks';
 
 interface PaginatedParams {
   generalSearch?: string;
   pageNumber: number;
   pageSize: number;
+  [key: string]: unknown;
 }
 
-function buildParams(req: PaginatedParams & Record<string, unknown>) {
+function buildParams(req: PaginatedParams) {
   const params = new URLSearchParams();
   Object.entries(req).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '')
@@ -121,7 +121,7 @@ export interface WilayahDto {
 
 export const wilayahService = {
   async getPaginated(req: WilayahParams): Promise<PaginatedResponse<WilayahDto>> {
-    const res = await api.get(`/api/wilayah?${buildParams(req as PaginatedParams & Record<string, unknown>)}`);
+    const res = await api.get(`/api/wilayah?${buildParams(req as PaginatedParams)}`);
     return res.data;
   },
   async getAll(tipe?: string, parentId?: string): Promise<WilayahDto[]> {
