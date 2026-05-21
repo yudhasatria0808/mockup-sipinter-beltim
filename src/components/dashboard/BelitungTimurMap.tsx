@@ -2,11 +2,14 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
-import { kecamatanData } from "./dashboardMockData";
+import type { MapKecamatanData, HeatmapPoint } from "../../services/dashboardService";
 
 interface BelitungTimurMapProps {
   selectedKecamatan: string | null;
   onSelectKecamatan: (nama: string | null) => void;
+  kecamatanData: MapKecamatanData[];
+  heatmapPoints: HeatmapPoint[];
+  loading?: boolean;
 }
 
 // Warna marker berdasarkan jumlah konflik
@@ -14,17 +17,30 @@ function getMarkerColor(totalKonflik: number): string {
   if (totalKonflik >= 7) return "#ef4444";
   if (totalKonflik >= 5) return "#f97316";
   if (totalKonflik >= 3) return "#eab308";
-  return "#22c55e";
+  if (totalKonflik >= 1) return "#22c55e";
+  return "#94a3b8";
 }
 
 function getMarkerRadius(totalKonflik: number): number {
   if (totalKonflik >= 7) return 18;
   if (totalKonflik >= 5) return 15;
   if (totalKonflik >= 3) return 12;
-  return 9;
+  if (totalKonflik >= 1) return 9;
+  return 6;
 }
 
-// More realistic polygon boundaries for Belitung Timur kecamatan
+// Fallback kecamatan coordinates if API doesn't have them
+const fallbackCoordinates: Record<string, { lat: number; lng: number }> = {
+  "Manggar": { lat: -2.8800, lng: 108.2700 },
+  "Gantung": { lat: -2.9600, lng: 108.0800 },
+  "Dendang": { lat: -2.7800, lng: 108.1500 },
+  "Kelapa Kampit": { lat: -2.8200, lng: 107.9500 },
+  "Damar": { lat: -3.0500, lng: 108.1000 },
+  "Simpang Renggiang": { lat: -2.9200, lng: 107.9800 },
+  "Simpang Pesak": { lat: -3.1000, lng: 107.8800 },
+};
+
+// Polygon boundaries for kecamatan
 const kecamatanBoundaries: Record<string, L.LatLngExpression[]> = {
   Manggar: [
     [-2.84, 108.22], [-2.83, 108.26], [-2.84, 108.30], [-2.86, 108.33],
@@ -63,64 +79,13 @@ const kecamatanBoundaries: Record<string, L.LatLngExpression[]> = {
   ],
 };
 
-/**
- * Generate realistic heatmap data points spread across the region.
- * Each kecamatan generates multiple points around its center with varying intensity.
- * This creates a smooth, realistic gradient heatmap similar to conflict potential maps.
- */
-function generateHeatmapPoints(): [number, number, number][] {
-  const points: [number, number, number][] = [];
-
-  // Main conflict hotspots based on kecamatan data
-  kecamatanData.forEach((kec) => {
-    const intensity = kec.totalKonflik / 8; // Normalize to 0-1
-    const numPoints = Math.max(8, kec.totalKonflik * 4); // More points for higher conflict areas
-
-    for (let i = 0; i < numPoints; i++) {
-      // Spread points around the center with gaussian-like distribution
-      const angle = (Math.PI * 2 * i) / numPoints + (Math.random() * 0.5);
-      const distance = Math.random() * 0.04 + 0.005; // Spread radius
-      const lat = kec.latitude + Math.cos(angle) * distance;
-      const lng = kec.longitude + Math.sin(angle) * distance;
-      const pointIntensity = intensity * (0.5 + Math.random() * 0.5);
-      points.push([lat, lng, pointIntensity]);
-    }
-
-    // Add concentrated center points for high-risk areas
-    if (kec.risikoTinggi > 0) {
-      for (let i = 0; i < kec.risikoTinggi * 5; i++) {
-        const lat = kec.latitude + (Math.random() - 0.5) * 0.02;
-        const lng = kec.longitude + (Math.random() - 0.5) * 0.02;
-        points.push([lat, lng, 0.9 + Math.random() * 0.1]);
-      }
-    }
-  });
-
-  // Add additional scattered points for realism (lower intensity background)
-  const additionalHotspots = [
-    { lat: -2.85, lng: 108.25, intensity: 0.6, spread: 0.03 }, // Near Manggar coast
-    { lat: -2.95, lng: 108.05, intensity: 0.4, spread: 0.025 }, // Gantung area
-    { lat: -2.82, lng: 107.95, intensity: 0.7, spread: 0.03 }, // Kelapa Kampit mining area
-    { lat: -3.08, lng: 107.88, intensity: 0.5, spread: 0.025 }, // Simpang Pesak coast
-    { lat: -2.90, lng: 108.27, intensity: 0.5, spread: 0.02 }, // Manggar south
-    { lat: -2.93, lng: 107.97, intensity: 0.35, spread: 0.02 }, // Simpang Renggiang
-    { lat: -2.78, lng: 108.15, intensity: 0.25, spread: 0.02 }, // Dendang
-    { lat: -3.05, lng: 108.10, intensity: 0.2, spread: 0.02 }, // Damar
-  ];
-
-  additionalHotspots.forEach((spot) => {
-    const count = Math.floor(spot.intensity * 15);
-    for (let i = 0; i < count; i++) {
-      const lat = spot.lat + (Math.random() - 0.5) * spot.spread * 2;
-      const lng = spot.lng + (Math.random() - 0.5) * spot.spread * 2;
-      points.push([lat, lng, spot.intensity * (0.4 + Math.random() * 0.6)]);
-    }
-  });
-
-  return points;
-}
-
-export default function BelitungTimurMap({ selectedKecamatan, onSelectKecamatan }: BelitungTimurMapProps) {
+export default function BelitungTimurMap({
+  selectedKecamatan,
+  onSelectKecamatan,
+  kecamatanData,
+  heatmapPoints,
+  loading,
+}: BelitungTimurMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -130,64 +95,38 @@ export default function BelitungTimurMap({ selectedKecamatan, onSelectKecamatan 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [showMarkers, setShowMarkers] = useState(true);
+  const [mapLayer, setMapLayer] = useState<'street' | 'satellite'>('street');
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   const invalidateMapSize = useCallback(() => {
     setTimeout(() => mapRef.current?.invalidateSize(), 100);
     setTimeout(() => mapRef.current?.invalidateSize(), 300);
     setTimeout(() => mapRef.current?.invalidateSize(), 600);
-    setTimeout(() => mapRef.current?.invalidateSize(), 1000);
   }, []);
 
   const toggleFullscreen = useCallback(() => {
     if (!wrapperRef.current) return;
-
     if (!isFullscreen) {
-      // Enter fullscreen via API
-      wrapperRef.current.requestFullscreen().catch(() => {
-        // If API fails, do nothing — CSS fallback not needed
-      });
+      wrapperRef.current.requestFullscreen().catch(() => {});
     } else {
-      // Exit fullscreen
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      }
+      if (document.fullscreenElement) document.exitFullscreen();
     }
   }, [isFullscreen]);
 
-  // Listen for fullscreen change events from browser
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isFull = !!document.fullscreenElement;
-      setIsFullscreen(isFull);
-    };
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  // Handle Escape key (browser handles this for Fullscreen API, but just in case)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isFullscreen && document.fullscreenElement) {
-        document.exitFullscreen();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isFullscreen]);
-
-  // Re-invalidate map size when fullscreen state changes
   useEffect(() => {
     invalidateMapSize();
-    if (isFullscreen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    if (isFullscreen) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
   }, [isFullscreen, invalidateMapSize]);
 
+  // Initialize map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
@@ -199,17 +138,53 @@ export default function BelitungTimurMap({ selectedKecamatan, onSelectKecamatan 
       attributionControl: true,
     });
 
-    // Use a cleaner tile layer for better heatmap visibility
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    const tile = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 18,
     }).addTo(map);
 
+    tileLayerRef.current = tile;
     mapRef.current = map;
 
-    // Draw kecamatan boundaries with subtle styling
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      heatLayerRef.current = null;
+      tileLayerRef.current = null;
+    };
+  }, []);
+
+  // Switch tile layer
+  useEffect(() => {
+    if (!mapRef.current || !tileLayerRef.current) return;
+
+    mapRef.current.removeLayer(tileLayerRef.current);
+
+    const url = mapLayer === 'satellite'
+      ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+    const attr = mapLayer === 'satellite'
+      ? '&copy; Esri'
+      : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
+    const tile = L.tileLayer(url, { attribution: attr, maxZoom: 18 }).addTo(mapRef.current);
+    tileLayerRef.current = tile;
+  }, [mapLayer]);
+
+  // Update markers and polygons when data changes
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Clear existing markers and polygons
+    markersRef.current.forEach((m) => mapRef.current!.removeLayer(m));
+    markersRef.current = [];
+    polygonsRef.current.forEach((p) => mapRef.current!.removeLayer(p));
+    polygonsRef.current = [];
+
+    // Draw kecamatan boundaries
     kecamatanData.forEach((kec) => {
-      const bounds = kecamatanBoundaries[kec.nama];
+      const bounds = kecamatanBoundaries[kec.kecamatan];
       if (!bounds) return;
 
       const polygon = L.polygon(bounds, {
@@ -218,60 +193,39 @@ export default function BelitungTimurMap({ selectedKecamatan, onSelectKecamatan 
         opacity: 0,
         fillColor: "transparent",
         fillOpacity: 0,
-      }).addTo(map);
+      }).addTo(mapRef.current!);
 
-      polygon.on("click", () => {
-        onSelectKecamatan(kec.nama);
-      });
+      polygon.on("click", () => onSelectKecamatan(kec.kecamatan));
 
       polygon.bindTooltip(
-        `<div style="font-weight:600;font-size:12px;">KEC. ${kec.nama.toUpperCase()}</div>`,
-        {
-          permanent: true,
-          direction: "center",
-          className: "kecamatan-label-tooltip",
-        }
+        `<div style="font-weight:600;font-size:12px;">KEC. ${kec.kecamatan.toUpperCase()}</div>`,
+        { permanent: true, direction: "center", className: "kecamatan-label-tooltip" }
       );
 
       polygonsRef.current.push(polygon);
     });
 
-    // Add heatmap layer
-    const heatPoints = generateHeatmapPoints();
-    const heat = L.heatLayer(heatPoints, {
-      radius: 35,
-      blur: 25,
-      maxZoom: 14,
-      max: 1.0,
-      minOpacity: 0.3,
-      gradient: {
-        0.0: "#00ff00",
-        0.2: "#adff2f",
-        0.4: "#ffff00",
-        0.6: "#ffa500",
-        0.8: "#ff4500",
-        1.0: "#ff0000",
-      },
-    }).addTo(map);
-    heatLayerRef.current = heat;
-
-    // Draw circle markers for each kecamatan
+    // Draw circle markers
     kecamatanData.forEach((kec) => {
+      const lat = kec.latitude ?? fallbackCoordinates[kec.kecamatan]?.lat;
+      const lng = kec.longitude ?? fallbackCoordinates[kec.kecamatan]?.lng;
+      if (!lat || !lng) return;
+
       const color = getMarkerColor(kec.totalKonflik);
       const radius = getMarkerRadius(kec.totalKonflik);
 
-      const marker = L.circleMarker([kec.latitude, kec.longitude], {
+      const marker = L.circleMarker([lat, lng], {
         radius,
         fillColor: color,
         color: "#fff",
         weight: 2.5,
         opacity: 1,
         fillOpacity: 0.9,
-      }).addTo(map);
+      }).addTo(mapRef.current!);
 
       marker.bindPopup(`
-        <div style="min-width: 180px; font-family: system-ui, sans-serif;">
-          <strong style="font-size: 14px; color: #1f2937;">${kec.nama}</strong>
+        <div style="min-width: 220px; font-family: system-ui, sans-serif;">
+          <strong style="font-size: 14px; color: #1f2937;">${kec.kecamatan}</strong>
           <hr style="margin: 8px 0; border-color: #e5e7eb;" />
           <div style="font-size: 12px; line-height: 1.8;">
             <div style="display:flex;justify-content:space-between;">
@@ -290,38 +244,109 @@ export default function BelitungTimurMap({ selectedKecamatan, onSelectKecamatan 
               <span>Risiko Rendah:</span>
               <strong>${kec.risikoRendah}</strong>
             </div>
+            <hr style="margin: 6px 0; border-color: #e5e7eb;" />
+            <div style="display:flex;justify-content:space-between;">
+              <span>Kewaspadaan:</span>
+              <strong>${kec.kewaspadaan}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span>Potensi Konflik:</span>
+              <strong>${kec.potensiKonflik}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span>Peristiwa Konflik:</span>
+              <strong>${kec.peristiwaKonflik}</strong>
+            </div>
+            <hr style="margin: 6px 0; border-color: #e5e7eb;" />
+            <div style="display:flex;justify-content:space-between;color:#7c3aed;">
+              <span>WNA:</span>
+              <strong>${kec.wna}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:#0891b2;">
+              <span>TKA:</span>
+              <strong>${kec.tka}</strong>
+            </div>
           </div>
         </div>
       `);
 
-      marker.on("click", () => {
-        onSelectKecamatan(kec.nama);
-      });
-
+      marker.on("click", () => onSelectKecamatan(kec.kecamatan));
       markersRef.current.push(marker);
     });
 
-    return () => {
-      map.remove();
-      mapRef.current = null;
-      heatLayerRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Toggle heatmap visibility
-  useEffect(() => {
-    if (!mapRef.current || !heatLayerRef.current) return;
-    if (showHeatmap) {
-      if (!mapRef.current.hasLayer(heatLayerRef.current)) {
-        heatLayerRef.current.addTo(mapRef.current);
-      }
-    } else {
-      if (mapRef.current.hasLayer(heatLayerRef.current)) {
-        mapRef.current.removeLayer(heatLayerRef.current);
-      }
+    // Show/hide markers based on toggle
+    if (!showMarkers) {
+      markersRef.current.forEach((m) => mapRef.current!.removeLayer(m));
     }
-  }, [showHeatmap]);
+  }, [kecamatanData, onSelectKecamatan, showMarkers]);
+
+  // Update heatmap layer when points change
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove existing heat layer
+    if (heatLayerRef.current) {
+      mapRef.current.removeLayer(heatLayerRef.current);
+      heatLayerRef.current = null;
+    }
+
+    if (!showHeatmap) return;
+
+    // Build heat points from API data
+    let points: [number, number, number][] = [];
+
+    if (heatmapPoints.length > 0) {
+      // Use real API data
+      points = heatmapPoints.map((p) => [p.latitude, p.longitude, p.intensity]);
+    } else if (kecamatanData.length > 0) {
+      // Generate synthetic heatmap from kecamatan data
+      kecamatanData.forEach((kec) => {
+        const lat = kec.latitude ?? fallbackCoordinates[kec.kecamatan]?.lat;
+        const lng = kec.longitude ?? fallbackCoordinates[kec.kecamatan]?.lng;
+        if (!lat || !lng) return;
+
+        const intensity = Math.min(kec.totalKonflik / 8, 1);
+        const numPoints = Math.max(5, kec.totalKonflik * 3);
+
+        for (let i = 0; i < numPoints; i++) {
+          const angle = (Math.PI * 2 * i) / numPoints + (Math.random() * 0.5);
+          const distance = Math.random() * 0.04 + 0.005;
+          const pLat = lat + Math.cos(angle) * distance;
+          const pLng = lng + Math.sin(angle) * distance;
+          const pIntensity = intensity * (0.5 + Math.random() * 0.5);
+          points.push([pLat, pLng, pIntensity]);
+        }
+
+        // Concentrated center for high-risk
+        if (kec.risikoTinggi > 0) {
+          for (let i = 0; i < kec.risikoTinggi * 4; i++) {
+            const pLat = lat + (Math.random() - 0.5) * 0.02;
+            const pLng = lng + (Math.random() - 0.5) * 0.02;
+            points.push([pLat, pLng, 0.85 + Math.random() * 0.15]);
+          }
+        }
+      });
+    }
+
+    if (points.length > 0) {
+      const heat = L.heatLayer(points, {
+        radius: 35,
+        blur: 25,
+        maxZoom: 14,
+        max: 1.0,
+        minOpacity: 0.3,
+        gradient: {
+          0.0: "#00ff00",
+          0.2: "#adff2f",
+          0.4: "#ffff00",
+          0.6: "#ffa500",
+          0.8: "#ff4500",
+          1.0: "#ff0000",
+        },
+      }).addTo(mapRef.current);
+      heatLayerRef.current = heat;
+    }
+  }, [heatmapPoints, kecamatanData, showHeatmap]);
 
   // Toggle markers visibility
   useEffect(() => {
@@ -340,7 +365,7 @@ export default function BelitungTimurMap({ selectedKecamatan, onSelectKecamatan 
     polygonsRef.current.forEach((polygon, idx) => {
       const kec = kecamatanData[idx];
       if (!kec) return;
-      const isSelected = selectedKecamatan === kec.nama;
+      const isSelected = selectedKecamatan === kec.kecamatan;
       polygon.setStyle({
         color: isSelected ? "#1d4ed8" : "transparent",
         weight: isSelected ? 3 : 0,
@@ -349,7 +374,7 @@ export default function BelitungTimurMap({ selectedKecamatan, onSelectKecamatan 
         fillOpacity: isSelected ? 0.15 : 0,
       });
     });
-  }, [selectedKecamatan]);
+  }, [selectedKecamatan, kecamatanData]);
 
   return (
     <div
@@ -359,7 +384,7 @@ export default function BelitungTimurMap({ selectedKecamatan, onSelectKecamatan 
     >
       {/* Controls bar */}
       <div className={`flex items-center justify-between mb-2 ${isFullscreen ? "px-2" : ""}`}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Heatmap toggle */}
           <button
             onClick={() => setShowHeatmap(!showHeatmap)}
@@ -391,36 +416,58 @@ export default function BelitungTimurMap({ selectedKecamatan, onSelectKecamatan 
             </svg>
             Marker
           </button>
+          {/* Map layer toggle */}
+          <button
+            onClick={() => setMapLayer(mapLayer === 'street' ? 'satellite' : 'street')}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+              mapLayer === 'satellite'
+                ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400"
+                : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+            }`}
+            title="Toggle Map Layer"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {mapLayer === 'satellite' ? 'Satelit' : 'Peta'}
+          </button>
         </div>
-        {/* Fullscreen button */}
-        <button
-          onClick={toggleFullscreen}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-          title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}
-        >
-          {isFullscreen ? (
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-            </svg>
+        <div className="flex items-center gap-2">
+          {loading && (
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <div className="h-3 w-3 animate-spin rounded-full border border-gray-300 border-t-brand-500" />
+              Memuat...
+            </div>
           )}
-          {isFullscreen ? "Tutup" : "Fullscreen"}
-        </button>
+          {/* Fullscreen button */}
+          <button
+            onClick={toggleFullscreen}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}
+          >
+            {isFullscreen ? (
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              </svg>
+            )}
+            {isFullscreen ? "Tutup" : "Fullscreen"}
+          </button>
+        </div>
       </div>
 
       {/* Map container */}
       <div
         ref={containerRef}
         className="w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700"
-        style={{ height: isFullscreen ? "calc(100vh - 120px)" : "400px" }}
+        style={{ height: isFullscreen ? "calc(100vh - 120px)" : "450px" }}
       />
 
       {/* Legend */}
       <div className={`mt-3 ${isFullscreen ? "px-2" : ""}`}>
-        {/* Heatmap gradient legend */}
         {showHeatmap && (
           <div className="mb-2 flex items-center gap-2">
             <span className="text-xs font-medium text-gray-600 dark:text-gray-400">TINGKAT POTENSI KONFLIK</span>
@@ -433,7 +480,6 @@ export default function BelitungTimurMap({ selectedKecamatan, onSelectKecamatan 
             </div>
           </div>
         )}
-        {/* Marker legend */}
         {showMarkers && (
           <div className="flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400">
             <div className="flex items-center gap-1.5">
@@ -451,6 +497,10 @@ export default function BelitungTimurMap({ selectedKecamatan, onSelectKecamatan 
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-[#22c55e] shadow-sm" />
               <span>1–2 konflik</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-[#94a3b8] shadow-sm" />
+              <span>0 konflik</span>
             </div>
           </div>
         )}
