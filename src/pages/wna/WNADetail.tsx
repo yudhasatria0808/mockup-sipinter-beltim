@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import { EditIcon, CloseIcon, CheckIcon } from "../../components/icons";
 import type { WNA, StatusApproval, StatusTinggal } from "../../types/wna";
-import { mockWNA } from "./mockData";
+import { wnaService } from "../../services/wnaService";
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -43,12 +43,26 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function WNADetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<WNA | undefined>(
-    mockWNA.find((d) => d.id === id)
-  );
+  const [data, setData] = useState<WNA | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [approvalAction, setApprovalAction] = useState<"disetujui" | "ditolak">("disetujui");
   const [catatan, setCatatan] = useState("");
+  const [approving, setApproving] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      wnaService.getById(id)
+        .then((res) => setData(res))
+        .catch(() => setData(null))
+        .finally(() => setLoading(false));
+    }
+  }, [id]);
+
+  if (loading) {
+    return <div className="text-center py-20 text-gray-500">Memuat data...</div>;
+  }
 
   if (!data) {
     return (
@@ -61,25 +75,22 @@ export default function WNADetail() {
     );
   }
 
-  const handleApproval = () => {
-    const idx = mockWNA.findIndex((d) => d.id === id);
-    if (idx !== -1) {
-      mockWNA[idx] = {
-        ...mockWNA[idx],
-        status: approvalAction,
-        catatanApproval: catatan,
-        approvedBy: "Admin Approver",
-        approvedAt: new Date().toISOString(),
-      };
-      setData({ ...mockWNA[idx] });
+  const handleApproval = async () => {
+    if (!id) return;
+    setApproving(true);
+    try {
+      const updated = await wnaService.approve(id, approvalAction, catatan || undefined);
+      setData(updated);
+      setShowApprovalModal(false);
+      setCatatan("");
+    } catch (err: any) {
+      alert(err?.response?.data?.message || "Gagal memproses approval");
+    } finally {
+      setApproving(false);
     }
-    setShowApprovalModal(false);
-    setCatatan("");
   };
 
   const s = statusBadge[data.status];
-
-  // Cek apakah visa sudah kadaluarsa
   const isExpired = new Date(data.masaBerlakuVisa) < new Date();
 
   return (
@@ -132,10 +143,7 @@ export default function WNADetail() {
           <Row
             label="Periode"
             value={new Date(data.periode).toLocaleDateString("id-ID", {
-              weekday: "long",
-              day: "2-digit",
-              month: "long",
-              year: "numeric",
+              weekday: "long", day: "2-digit", month: "long", year: "numeric",
             })}
           />
           <Row label="Jenis Kelamin" value={data.jenisKelamin} />
@@ -158,11 +166,7 @@ export default function WNADetail() {
             label="Masa Berlaku Visa"
             value={
               <span className={isExpired ? "text-error-600 font-medium" : ""}>
-                {new Date(data.masaBerlakuVisa).toLocaleDateString("id-ID", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
+                {new Date(data.masaBerlakuVisa).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
                 {isExpired && (
                   <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-error-100 text-error-700 dark:bg-error-900/30 dark:text-error-400">
                     Kadaluarsa
@@ -197,6 +201,7 @@ export default function WNADetail() {
           />
           <Row label="Keterangan Tambahan" value={data.keterangan || "-"} />
           <Row label="Sumber Informasi" value={data.sumberInformasi} />
+          <Row label="Saran Tindak Lanjut" value={data.saranTindakLanjut || "-"} />
         </Section>
 
         {/* Info Approval */}
@@ -253,6 +258,7 @@ export default function WNADetail() {
               <Button
                 size="sm"
                 onClick={handleApproval}
+                disabled={approving}
                 className={approvalAction === "disetujui" ? "bg-success-500 hover:bg-success-600" : "bg-error-500 hover:bg-error-600"}
               >
                 {approvalAction === "disetujui" ? "Setujui" : "Tolak"}

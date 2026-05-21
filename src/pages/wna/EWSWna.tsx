@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
-import { mockWNA } from "./mockData";
 import type { WNA, StatusTinggal } from "../../types/wna";
+import { wnaService } from "../../services/wnaService";
 
 const statusConfig: Record<StatusTinggal, { color: string; bg: string; border: string; dot: string }> = {
   "Habis Izin": {
@@ -31,7 +31,6 @@ const statusConfig: Record<StatusTinggal, { color: string; bg: string; border: s
   },
 };
 
-// Urutan prioritas: Habis Izin paling atas (perlu perhatian)
 const statusOrder: StatusTinggal[] = ["Habis Izin", "Aktif", "Keluar", "Lainnya"];
 
 function StatCard({
@@ -77,7 +76,6 @@ function WNACard({ item, onClick }: { item: WNA; onClick: () => void }) {
         {item.jenisKelamin} · {item.pekerjaan || "-"}
       </p>
 
-      {/* Visa info */}
       <div className="mt-2 flex flex-wrap gap-2">
         <span className="text-xs bg-white/60 dark:bg-gray-800/60 px-2 py-0.5 rounded-full text-gray-600 dark:text-gray-400">
           {item.jenisVisa}
@@ -114,9 +112,26 @@ export default function EWSWna() {
   const [filterStatus, setFilterStatus] = useState<StatusTinggal | "">("");
   const [filterVisa, setFilterVisa] = useState("");
   const [filterWilayah, setFilterWilayah] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<WNA[]>([]);
+  const [stats, setStats] = useState<{
+    total: number;
+    byStatusTinggal: { aktif: number; keluar: number; habisIzin: number; lainnya: number };
+    byKewarganegaraan: { kewarganegaraan: string; count: number }[];
+  } | null>(null);
 
-  // Hanya tampilkan yang sudah disetujui
-  const approved = mockWNA.filter((d) => d.status === "disetujui");
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await wnaService.getEWS();
+      setItems(res.items);
+      setStats(res.stats);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const approved = items;
 
   const filtered = approved.filter((item) => {
     const matchStatus = filterStatus ? item.statusTinggal === filterStatus : true;
@@ -128,14 +143,24 @@ export default function EWSWna() {
     return matchStatus && matchVisa && matchWilayah;
   });
 
-  const countByStatus = (s: StatusTinggal) => approved.filter((d) => d.statusTinggal === s).length;
+  const countByStatus = (s: StatusTinggal) => {
+    if (!stats) return 0;
+    const map: Record<StatusTinggal, number> = {
+      Aktif: stats.byStatusTinggal.aktif,
+      Keluar: stats.byStatusTinggal.keluar,
+      "Habis Izin": stats.byStatusTinggal.habisIzin,
+      Lainnya: stats.byStatusTinggal.lainnya,
+    };
+    return map[s] ?? 0;
+  };
 
-  // Hitung visa yang sudah kadaluarsa
   const expiredCount = approved.filter((d) => new Date(d.masaBerlakuVisa) < new Date()).length;
-
-  // Kewarganegaraan unik
   const negaraList = [...new Set(approved.map((d) => d.kewarganegaraan))];
   const visaList = [...new Set(approved.map((d) => d.jenisVisa))];
+
+  if (loading) {
+    return <div className="text-center py-20 text-gray-500">Memuat data...</div>;
+  }
 
   return (
     <>
@@ -171,7 +196,7 @@ export default function EWSWna() {
         {/* Ringkasan tambahan */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
-            <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">{approved.length}</p>
+            <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">{stats?.total ?? 0}</p>
             <p className="text-xs mt-0.5 text-gray-500">Total WNA Terdaftar</p>
           </div>
           <div className="rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-900/20 p-4">
@@ -188,18 +213,19 @@ export default function EWSWna() {
           </div>
         </div>
 
-        {/* Distribusi Kewarganegaraan */}
+        {/* Distribusi Status Tinggal */}
         <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Distribusi Status Tinggal
             </span>
-            <span className="text-xs text-gray-400">{approved.length} total data disetujui</span>
+            <span className="text-xs text-gray-400">{stats?.total ?? 0} total data disetujui</span>
           </div>
           <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
             {statusOrder.map((s) => {
               const count = countByStatus(s);
-              const pct = approved.length > 0 ? (count / approved.length) * 100 : 0;
+              const total = stats?.total ?? 0;
+              const pct = total > 0 ? (count / total) * 100 : 0;
               if (pct === 0) return null;
               return (
                 <div
@@ -255,19 +281,19 @@ export default function EWSWna() {
           </div>
         ) : (
           statusOrder.map((s) => {
-            const items = filtered.filter((d) => d.statusTinggal === s);
-            if (items.length === 0) return null;
+            const statusItems = filtered.filter((d) => d.statusTinggal === s);
+            if (statusItems.length === 0) return null;
             const cfg = statusConfig[s];
             return (
               <div key={s} className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className={`w-3 h-3 rounded-full ${cfg.dot}`} />
                   <h3 className={`text-sm font-semibold ${cfg.color}`}>
-                    {s} ({items.length})
+                    {s} ({statusItems.length})
                   </h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {items.map((item) => (
+                  {statusItems.map((item) => (
                     <WNACard
                       key={item.id}
                       item={item}

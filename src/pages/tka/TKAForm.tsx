@@ -8,8 +8,10 @@ import SelectField from "../../components/form/SelectField";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import { CheckIcon as SaveIcon, CloseIcon } from "../../components/icons";
-import type { TKA, JenisKelamin, JenisIzinTinggal } from "../../types/tka";
-import { mockTKA, kewarganegaraanOptions, jenisIzinTinggalOptions } from "./mockData";
+import { tkaService } from "../../services/tkaService";
+
+const kewarganegaraanOptions = ["Amerika Serikat", "Australia", "Belanda", "India", "Inggris", "Jepang", "Jerman", "Kanada", "Korea Selatan", "Malaysia", "Perancis", "Singapura", "Tiongkok", "Lainnya"];
+const jenisIzinTinggalOptions = ["Visa", "KITAS", "KITAP"];
 
 const emptyForm = {
   periode: "",
@@ -41,37 +43,42 @@ export default function TKAForm() {
 
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (isEdit && id) {
-      const found = mockTKA.find((d) => d.id === id);
-      if (found) {
-        setForm({
-          periode: found.periode,
-          namaTKA: found.namaTKA,
-          jenisKelamin: found.jenisKelamin,
-          namaPerusahaan: found.namaPerusahaan,
-          jabatanKeterampilan: found.jabatanKeterampilan,
-          noTelepon: found.noTelepon,
-          kewarganegaraan: found.kewarganegaraan,
-          noPaspor: found.noPaspor,
-          nomorIMTA: found.nomorIMTA,
-          tanggalMulaiIMTA: found.tanggalMulaiIMTA,
-          tanggalBerakhirIMTA: found.tanggalBerakhirIMTA,
-          jenisIzinTinggal: found.jenisIzinTinggal,
-          kabupaten: found.kabupaten,
-          kecamatan: found.kecamatan,
-          desa: found.desa,
-          alamatDetail: found.alamatDetail,
-          titikKoordinat: found.titikKoordinat,
-          keterangan: found.keterangan ?? "",
-          sumberInformasi: found.sumberInformasi,
-          saranTindakLanjut: found.saranTindakLanjut ?? "",
-        });
-      } else {
-        alert("Data tidak ditemukan");
-        navigate("/tka");
-      }
+      setLoading(true);
+      tkaService.getById(id)
+        .then((found) => {
+          setForm({
+            periode: found.periode,
+            namaTKA: found.namaTKA,
+            jenisKelamin: found.jenisKelamin,
+            namaPerusahaan: found.namaPerusahaan,
+            jabatanKeterampilan: found.jabatanKeterampilan,
+            noTelepon: found.noTelepon,
+            kewarganegaraan: found.kewarganegaraan,
+            noPaspor: found.noPaspor,
+            nomorIMTA: found.nomorIMTA,
+            tanggalMulaiIMTA: found.tanggalMulaiIMTA,
+            tanggalBerakhirIMTA: found.tanggalBerakhirIMTA,
+            jenisIzinTinggal: found.jenisIzinTinggal,
+            kabupaten: found.kabupaten,
+            kecamatan: found.kecamatan,
+            desa: found.desa,
+            alamatDetail: found.alamatDetail,
+            titikKoordinat: found.titikKoordinat,
+            keterangan: found.keterangan ?? "",
+            sumberInformasi: found.sumberInformasi,
+            saranTindakLanjut: found.saranTindakLanjut ?? "",
+          });
+        })
+        .catch(() => {
+          alert("Data tidak ditemukan");
+          navigate("/tka");
+        })
+        .finally(() => setLoading(false));
     }
   }, [id, isEdit, navigate]);
 
@@ -101,31 +108,53 @@ export default function TKAForm() {
     return Object.keys(e).length === 0;
   };
 
-  const handleSave = (submitStatus: "draft" | "menunggu") => {
+  const handleSave = async (submitStatus: "draft" | "menunggu") => {
     if (!validate()) return;
+    setSubmitting(true);
 
-    const mapped = mapFormToData(form);
+    const payload = {
+      periode: form.periode,
+      namaTKA: form.namaTKA,
+      jenisKelamin: form.jenisKelamin,
+      namaPerusahaan: form.namaPerusahaan,
+      jabatanKeterampilan: form.jabatanKeterampilan || undefined,
+      noTelepon: form.noTelepon || undefined,
+      kewarganegaraan: form.kewarganegaraan,
+      noPaspor: form.noPaspor,
+      nomorIMTA: form.nomorIMTA || undefined,
+      tanggalMulaiIMTA: form.tanggalMulaiIMTA || undefined,
+      tanggalBerakhirIMTA: form.tanggalBerakhirIMTA || undefined,
+      jenisIzinTinggal: form.jenisIzinTinggal,
+      kabupaten: form.kabupaten,
+      kecamatan: form.kecamatan,
+      desa: form.desa,
+      alamatDetail: form.alamatDetail || undefined,
+      titikKoordinat: form.titikKoordinat || undefined,
+      keterangan: form.keterangan || undefined,
+      sumberInformasi: form.sumberInformasi || undefined,
+      saranTindakLanjut: form.saranTindakLanjut || undefined,
+      status: submitStatus,
+    };
 
-    if (isEdit && id) {
-      const idx = mockTKA.findIndex((d) => d.id === id);
-      if (idx !== -1) {
-        mockTKA[idx] = { ...mockTKA[idx], ...mapped, status: submitStatus };
+    try {
+      if (isEdit && id) {
+        await tkaService.update(id, payload);
+      } else {
+        await tkaService.create(payload);
       }
-    } else {
-      const newItem: TKA = {
-        id: String(Date.now()),
-        ...mapped,
-        status: submitStatus,
-        createdBy: "Admin",
-        createdAt: new Date().toISOString(),
-      };
-      mockTKA.unshift(newItem);
+      navigate("/tka");
+    } catch (err: any) {
+      alert(err?.response?.data?.message || "Gagal menyimpan data");
+    } finally {
+      setSubmitting(false);
     }
-
-    navigate("/tka");
   };
 
   const textareaClass = "w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none";
+
+  if (loading) {
+    return <div className="text-center py-20 text-gray-500">Memuat data...</div>;
+  }
 
   return (
     <>
@@ -224,10 +253,10 @@ export default function TKAForm() {
 
         {/* Actions */}
         <div className="flex items-center gap-3 flex-wrap">
-          <Button size="sm" variant="outline" onClick={() => handleSave("draft")} className="gap-1.5">
+          <Button size="sm" variant="outline" onClick={() => handleSave("draft")} disabled={submitting} className="gap-1.5">
             Simpan Draft
           </Button>
-          <Button size="sm" onClick={() => handleSave("menunggu")} className="gap-1.5">
+          <Button size="sm" onClick={() => handleSave("menunggu")} disabled={submitting} className="gap-1.5">
             <SaveIcon /> Kirim untuk Approval
           </Button>
           <button onClick={() => navigate("/tka")} className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
@@ -237,28 +266,4 @@ export default function TKAForm() {
       </div>
     </>
   );
-}
-
-function mapFormToData(form: typeof emptyForm): Omit<TKA, "id" | "status" | "createdBy" | "createdAt"> {
-  return {
-    periode: form.periode,
-    namaTKA: form.namaTKA,
-    jenisKelamin: form.jenisKelamin as JenisKelamin,
-    namaPerusahaan: form.namaPerusahaan,
-    jabatanKeterampilan: form.jabatanKeterampilan,
-    noTelepon: form.noTelepon,
-    kewarganegaraan: form.kewarganegaraan,
-    noPaspor: form.noPaspor,
-    nomorIMTA: form.nomorIMTA,
-    tanggalMulaiIMTA: form.tanggalMulaiIMTA,
-    tanggalBerakhirIMTA: form.tanggalBerakhirIMTA,
-    jenisIzinTinggal: form.jenisIzinTinggal as JenisIzinTinggal,
-    kabupaten: form.kabupaten,
-    kecamatan: form.kecamatan,
-    desa: form.desa,
-    alamatDetail: form.alamatDetail,
-    titikKoordinat: form.titikKoordinat,
-    keterangan: form.keterangan,
-    sumberInformasi: form.sumberInformasi,
-  };
 }

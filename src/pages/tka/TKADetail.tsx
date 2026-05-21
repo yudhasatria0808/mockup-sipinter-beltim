@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import { EditIcon, CloseIcon, CheckIcon } from "../../components/icons";
 import type { TKA, StatusApproval, JenisIzinTinggal } from "../../types/tka";
-import { mockTKA } from "./mockData";
+import { tkaService } from "../../services/tkaService";
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -42,12 +42,21 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function TKADetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<TKA | undefined>(
-    mockTKA.find((d) => d.id === id)
-  );
+  const [data, setData] = useState<TKA | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [approvalAction, setApprovalAction] = useState<"disetujui" | "ditolak">("disetujui");
   const [catatan, setCatatan] = useState("");
+  const [approving, setApproving] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      tkaService.getById(id).then(setData).catch(() => { alert("Data tidak ditemukan"); navigate("/tka"); }).finally(() => setLoading(false));
+    }
+  }, [id, navigate]);
+
+  if (loading) return <div className="flex items-center justify-center py-16"><div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" /></div>;
 
   if (!data) {
     return (
@@ -60,20 +69,16 @@ export default function TKADetail() {
     );
   }
 
-  const handleApproval = () => {
-    const idx = mockTKA.findIndex((d) => d.id === id);
-    if (idx !== -1) {
-      mockTKA[idx] = {
-        ...mockTKA[idx],
-        status: approvalAction,
-        catatanApproval: catatan,
-        approvedBy: "Admin Approver",
-        approvedAt: new Date().toISOString(),
-      };
-      setData({ ...mockTKA[idx] });
-    }
-    setShowApprovalModal(false);
-    setCatatan("");
+  const handleApproval = async () => {
+    if (!id) return;
+    setApproving(true);
+    try {
+      const updated = await tkaService.approve(id, approvalAction, catatan || undefined);
+      setData(updated);
+      setShowApprovalModal(false);
+      setCatatan("");
+    } catch { alert("Gagal memproses"); }
+    finally { setApproving(false); }
   };
 
   const s = statusBadge[data.status];

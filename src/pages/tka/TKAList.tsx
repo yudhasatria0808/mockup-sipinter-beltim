@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
 import { PageHeader, ActionButton } from "../../components/common";
@@ -7,8 +7,10 @@ import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import { DataTable, type DataTableColumn } from "../../components/ui/table";
 import { PlusIcon, SearchIcon, EditIcon, TrashIcon, EyeIcon } from "../../components/icons";
-import type { TKA, StatusApproval, JenisIzinTinggal } from "../../types/tka";
-import { mockTKA, jenisIzinTinggalOptions } from "./mockData";
+import type { StatusApproval, JenisIzinTinggal } from "../../types/tka";
+import { tkaService } from "../../services/tkaService";
+
+const jenisIzinTinggalOptions = ["Visa", "KITAS", "KITAP"];
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -23,39 +25,50 @@ const izinTinggalBadge: Record<JenisIzinTinggal, string> = {
   KITAP: "bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-400",
 };
 
+interface ListItem {
+  id: string; periode: string; namaTKA: string; jenisKelamin: string;
+  namaPerusahaan: string; jabatanKeterampilan?: string;
+  kewarganegaraan: string; noPaspor: string;
+  nomorIMTA?: string; tanggalBerakhirIMTA?: string;
+  jenisIzinTinggal: string;
+  kabupaten: string; kecamatan: string; desa: string;
+  status: string;
+}
+
 export default function TKAList() {
   const navigate = useNavigate();
-  const [data, setData] = useState<TKA[]>(mockTKA);
+  const [data, setData] = useState<ListItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterIzin, setFilterIzin] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pagination, setPagination] = useState({ pageNumber: 1, pageSize: 10, totalPages: 1, totalCount: 0 });
 
-  const filtered = data.filter((item) => {
-    const matchSearch =
-      item.namaTKA.toLowerCase().includes(search.toLowerCase()) ||
-      item.namaPerusahaan.toLowerCase().includes(search.toLowerCase()) ||
-      item.noPaspor.toLowerCase().includes(search.toLowerCase()) ||
-      item.kewarganegaraan.toLowerCase().includes(search.toLowerCase()) ||
-      item.kabupaten.toLowerCase().includes(search.toLowerCase()) ||
-      item.kecamatan.toLowerCase().includes(search.toLowerCase());
-    const matchIzin = filterIzin ? item.jenisIzinTinggal === filterIzin : true;
-    const matchStatus = filterStatus ? item.status === filterStatus : true;
-    return matchSearch && matchIzin && matchStatus;
-  });
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await tkaService.getPaginated({
+        generalSearch: search || undefined,
+        jenisIzinTinggal: filterIzin || undefined,
+        status: filterStatus || undefined,
+        pageNumber: pagination.pageNumber,
+        pageSize: pagination.pageSize,
+      });
+      setData(res.data ?? []);
+      setPagination((p) => ({ ...p, totalPages: res.totalPages, totalCount: res.totalCount }));
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  }, [search, filterIzin, filterStatus, pagination.pageNumber, pagination.pageSize]);
 
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data ini?")) return;
-    setData((prev) => prev.filter((item) => item.id !== id));
+    try { await tkaService.delete(id); fetchData(); } catch { alert("Gagal menghapus"); }
   };
 
-  const isIMTAExpired = (tanggalBerakhir: string) => new Date(tanggalBerakhir) < new Date();
+  const isIMTAExpired = (tanggalBerakhir?: string) => tanggalBerakhir ? new Date(tanggalBerakhir) < new Date() : false;
 
-  const columns: DataTableColumn<TKA>[] = [
+  const columns: DataTableColumn<ListItem>[] = [
     {
       key: "periode",
       header: "Periode",
@@ -77,7 +90,7 @@ export default function TKAList() {
       render: (row) => (
         <div className="space-y-0.5">
           <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-1">{row.namaPerusahaan}</p>
-          <p className="text-xs text-gray-400">{row.jabatanKeterampilan}</p>
+          <p className="text-xs text-gray-400">{row.jabatanKeterampilan || "-"}</p>
         </div>
       ),
     },
@@ -86,11 +99,13 @@ export default function TKAList() {
       header: "No. IMTA/RPTKA",
       render: (row) => (
         <div className="space-y-0.5">
-          <p className="text-sm font-mono text-gray-700 dark:text-gray-300">{row.nomorIMTA}</p>
-          <p className={`text-xs ${isIMTAExpired(row.tanggalBerakhirIMTA) ? "text-error-500" : "text-gray-400"}`}>
-            s/d {new Date(row.tanggalBerakhirIMTA).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
-            {isIMTAExpired(row.tanggalBerakhirIMTA) && " ⚠"}
-          </p>
+          <p className="text-sm font-mono text-gray-700 dark:text-gray-300">{row.nomorIMTA || "-"}</p>
+          {row.tanggalBerakhirIMTA && (
+            <p className={`text-xs ${isIMTAExpired(row.tanggalBerakhirIMTA) ? "text-error-500" : "text-gray-400"}`}>
+              s/d {new Date(row.tanggalBerakhirIMTA).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+              {isIMTAExpired(row.tanggalBerakhirIMTA) && " ⚠"}
+            </p>
+          )}
         </div>
       ),
     },
@@ -98,7 +113,7 @@ export default function TKAList() {
       key: "jenisIzinTinggal",
       header: "Izin Tinggal",
       render: (row) => (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${izinTinggalBadge[row.jenisIzinTinggal]}`}>
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${izinTinggalBadge[row.jenisIzinTinggal as JenisIzinTinggal] || ""}`}>
           {row.jenisIzinTinggal}
         </span>
       ),
@@ -116,8 +131,8 @@ export default function TKAList() {
       key: "status",
       header: "Status",
       render: (row) => {
-        const s = statusBadge[row.status];
-        return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span>;
+        const s = statusBadge[row.status as StatusApproval];
+        return s ? <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span> : row.status;
       },
     },
   ];
@@ -139,12 +154,12 @@ export default function TKAList() {
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><SearchIcon /></span>
-            <Input placeholder="Cari nama TKA, perusahaan, paspor, wilayah..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
+            <Input placeholder="Cari nama TKA, perusahaan, paspor, wilayah..." value={search} onChange={(e) => { setSearch(e.target.value); setPagination((p) => ({ ...p, pageNumber: 1 })); }} className="pl-9" />
           </div>
-          <SelectField value={filterIzin} onChange={(v) => { setFilterIzin(v); setPage(1); }} options={jenisIzinTinggalOptions} placeholder="Semua Jenis Izin Tinggal" className="w-auto min-w-[180px]" />
+          <SelectField value={filterIzin} onChange={(v) => { setFilterIzin(v); setPagination((p) => ({ ...p, pageNumber: 1 })); }} options={jenisIzinTinggalOptions} placeholder="Semua Jenis Izin Tinggal" className="w-auto min-w-[180px]" />
           <SelectField
             value={filterStatus}
-            onChange={(v) => { setFilterStatus(v); setPage(1); }}
+            onChange={(v) => { setFilterStatus(v); setPagination((p) => ({ ...p, pageNumber: 1 })); }}
             options={[
               { value: "draft", label: "Draft" },
               { value: "menunggu", label: "Menunggu" },
@@ -158,10 +173,11 @@ export default function TKAList() {
 
         <DataTable
           columns={columns}
-          data={paginated}
+          data={data}
+          loading={loading}
           emptyText="Belum ada data tenaga kerja asing."
-          pagination={{ pageNumber: page, pageSize, totalPages, totalCount: filtered.length }}
-          onPageChange={setPage}
+          pagination={pagination}
+          onPageChange={(page) => setPagination((p) => ({ ...p, pageNumber: page }))}
           rowKey={(item) => item.id}
           actions={(item) => (
             <>

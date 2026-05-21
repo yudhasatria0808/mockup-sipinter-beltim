@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
 import { PageHeader, ActionButton } from "../../components/common";
@@ -7,8 +7,20 @@ import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import { DataTable, type DataTableColumn } from "../../components/ui/table";
 import { PlusIcon, SearchIcon, EditIcon, TrashIcon, EyeIcon } from "../../components/icons";
-import type { WNA, StatusApproval, StatusTinggal } from "../../types/wna";
-import { mockWNA, jenisVisaOptions } from "./mockData";
+import type { StatusApproval, StatusTinggal } from "../../types/wna";
+import { wnaService } from "../../services/wnaService";
+
+const jenisVisaOptions = [
+  "KITAS",
+  "KITAP",
+  "Visa Kunjungan",
+  "Visa Wisata",
+  "Visa Dinas",
+  "Visa Diplomatik",
+  "Visa Pelajar",
+  "Visa Kerja",
+  "Lainnya",
+];
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -24,38 +36,48 @@ const statusTinggalBadge: Record<StatusTinggal, string> = {
   Lainnya: "bg-brand-50 text-brand-700 dark:bg-brand-900/20 dark:text-brand-400",
 };
 
+interface ListItem {
+  id: string; periode: string; jenisKelamin: string;
+  kewarganegaraan: string; noPaspor: string; jenisVisa: string;
+  masaBerlakuVisa: string; pekerjaan?: string; sponsor?: string;
+  kabupaten: string; kecamatan: string; desa: string;
+  statusTinggal: string; status: string;
+}
+
 export default function WNAList() {
   const navigate = useNavigate();
-  const [data, setData] = useState<WNA[]>(mockWNA);
+  const [data, setData] = useState<ListItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterVisa, setFilterVisa] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterStatusTinggal, setFilterStatusTinggal] = useState("");
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pagination, setPagination] = useState({ pageNumber: 1, pageSize: 10, totalPages: 1, totalCount: 0 });
 
-  const filtered = data.filter((item) => {
-    const matchSearch =
-      item.noPaspor.toLowerCase().includes(search.toLowerCase()) ||
-      item.kewarganegaraan.toLowerCase().includes(search.toLowerCase()) ||
-      item.pekerjaan.toLowerCase().includes(search.toLowerCase()) ||
-      item.kabupaten.toLowerCase().includes(search.toLowerCase()) ||
-      item.kecamatan.toLowerCase().includes(search.toLowerCase());
-    const matchVisa = filterVisa ? item.jenisVisa === filterVisa : true;
-    const matchStatus = filterStatus ? item.status === filterStatus : true;
-    const matchStatusTinggal = filterStatusTinggal ? item.statusTinggal === filterStatusTinggal : true;
-    return matchSearch && matchVisa && matchStatus && matchStatusTinggal;
-  });
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await wnaService.getPaginated({
+        generalSearch: search || undefined,
+        jenisVisa: filterVisa || undefined,
+        statusTinggal: filterStatusTinggal || undefined,
+        status: filterStatus || undefined,
+        pageNumber: pagination.pageNumber,
+        pageSize: pagination.pageSize,
+      });
+      setData(res.data ?? []);
+      setPagination((p) => ({ ...p, totalPages: res.totalPages, totalCount: res.totalCount }));
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  }, [search, filterVisa, filterStatusTinggal, filterStatus, pagination.pageNumber, pagination.pageSize]);
 
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus data ini?")) return;
-    setData((prev) => prev.filter((item) => item.id !== id));
+    try { await wnaService.delete(id); fetchData(); } catch { alert("Gagal menghapus"); }
   };
 
-  const columns: DataTableColumn<WNA>[] = [
+  const columns: DataTableColumn<ListItem>[] = [
     {
       key: "periode",
       header: "Periode",
@@ -90,8 +112,8 @@ export default function WNAList() {
       header: "Pekerjaan / Sponsor",
       render: (row) => (
         <div className="space-y-0.5">
-          <p className="text-sm text-gray-700 dark:text-gray-300">{row.pekerjaan}</p>
-          <p className="text-xs text-gray-400">{row.sponsor}</p>
+          <p className="text-sm text-gray-700 dark:text-gray-300">{row.pekerjaan || "-"}</p>
+          <p className="text-xs text-gray-400">{row.sponsor || "-"}</p>
         </div>
       ),
     },
@@ -108,7 +130,7 @@ export default function WNAList() {
       key: "statusTinggal",
       header: "Ket. Status",
       render: (row) => (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusTinggalBadge[row.statusTinggal]}`}>
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusTinggalBadge[row.statusTinggal as StatusTinggal] || ""}`}>
           {row.statusTinggal}
         </span>
       ),
@@ -117,8 +139,8 @@ export default function WNAList() {
       key: "status",
       header: "Status",
       render: (row) => {
-        const s = statusBadge[row.status];
-        return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span>;
+        const s = statusBadge[row.status as StatusApproval];
+        return s ? <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span> : row.status;
       },
     },
   ];
@@ -140,19 +162,19 @@ export default function WNAList() {
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><SearchIcon /></span>
-            <Input placeholder="Cari no. paspor, kewarganegaraan, wilayah..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
+            <Input placeholder="Cari no. paspor, kewarganegaraan, wilayah..." value={search} onChange={(e) => { setSearch(e.target.value); setPagination((p) => ({ ...p, pageNumber: 1 })); }} className="pl-9" />
           </div>
-          <SelectField value={filterVisa} onChange={(v) => { setFilterVisa(v); setPage(1); }} options={jenisVisaOptions} placeholder="Semua Jenis Visa" className="w-auto min-w-[160px]" />
+          <SelectField value={filterVisa} onChange={(v) => { setFilterVisa(v); setPagination((p) => ({ ...p, pageNumber: 1 })); }} options={jenisVisaOptions} placeholder="Semua Jenis Visa" className="w-auto min-w-[160px]" />
           <SelectField
             value={filterStatusTinggal}
-            onChange={(v) => { setFilterStatusTinggal(v); setPage(1); }}
+            onChange={(v) => { setFilterStatusTinggal(v); setPagination((p) => ({ ...p, pageNumber: 1 })); }}
             options={["Aktif", "Keluar", "Habis Izin", "Lainnya"]}
             placeholder="Semua Status Tinggal"
             className="w-auto min-w-[170px]"
           />
           <SelectField
             value={filterStatus}
-            onChange={(v) => { setFilterStatus(v); setPage(1); }}
+            onChange={(v) => { setFilterStatus(v); setPagination((p) => ({ ...p, pageNumber: 1 })); }}
             options={[
               { value: "draft", label: "Draft" },
               { value: "menunggu", label: "Menunggu" },
@@ -166,10 +188,11 @@ export default function WNAList() {
 
         <DataTable
           columns={columns}
-          data={paginated}
+          data={data}
+          loading={loading}
           emptyText="Belum ada data warga negara asing."
-          pagination={{ pageNumber: page, pageSize, totalPages, totalCount: filtered.length }}
-          onPageChange={setPage}
+          pagination={pagination}
+          onPageChange={(page) => setPagination((p) => ({ ...p, pageNumber: page }))}
           rowKey={(item) => item.id}
           actions={(item) => (
             <>

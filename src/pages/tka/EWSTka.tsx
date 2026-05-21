@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
-import { mockTKA } from "./mockData";
+import { tkaService } from "../../services/tkaService";
 import type { TKA, JenisIzinTinggal } from "../../types/tka";
 
 const izinConfig: Record<JenisIzinTinggal, { color: string; bg: string; border: string; dot: string }> = {
@@ -119,29 +119,24 @@ function TKACard({ item, onClick }: { item: TKA; onClick: () => void }) {
 
 export default function EWSTka() {
   const navigate = useNavigate();
-  const [filterIzin, setFilterIzin] = useState<JenisIzinTinggal | "">("");
-  const [filterWilayah, setFilterWilayah] = useState("");
+  const [items, setItems] = useState<TKA[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filterKewarganegaraan, setFilterKewarganegaraan] = useState("");
 
-  // Hanya tampilkan yang sudah disetujui
-  const approved = mockTKA.filter((d) => d.status === "disetujui");
+  useEffect(() => {
+    setLoading(true);
+    tkaService.getEWS(filterKewarganegaraan || undefined)
+      .then((res) => setItems(res.items))
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, [filterKewarganegaraan]);
 
-  const filtered = approved.filter((item) => {
-    const matchIzin = filterIzin ? item.jenisIzinTinggal === filterIzin : true;
-    const matchWilayah = filterWilayah
-      ? item.kabupaten.toLowerCase().includes(filterWilayah.toLowerCase()) ||
-        item.kecamatan.toLowerCase().includes(filterWilayah.toLowerCase())
-      : true;
-    const matchNegara = filterKewarganegaraan
-      ? item.kewarganegaraan === filterKewarganegaraan
-      : true;
-    return matchIzin && matchWilayah && matchNegara;
-  });
+  const filtered = items;
 
   const countByIzin = (izin: JenisIzinTinggal) =>
-    approved.filter((d) => d.jenisIzinTinggal === izin).length;
+    items.filter((d) => d.jenisIzinTinggal === izin).length;
 
-  const expiredCount = approved.filter(
+  const expiredCount = items.filter(
     (d) => new Date(d.tanggalBerakhirIMTA) < new Date()
   ).length;
 
