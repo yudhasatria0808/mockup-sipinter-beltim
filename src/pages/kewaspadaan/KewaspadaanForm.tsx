@@ -8,8 +8,12 @@ import SelectField from "../../components/form/SelectField";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import { CheckIcon as SaveIcon, CloseIcon } from "../../components/icons";
-import type { KewaspadaanDini, LevelRisikoLabel } from "../../types/kewaspadaan";
-import { mockKewaspadaan, aspekOptions, levelKemungkinanOptions, levelDampakOptions, kalkulasiTingkatRisiko } from "./mockData";
+import type { LevelRisikoLabel } from "../../types/kewaspadaan";
+import { kewaspadaanService } from "../../services/kewaspadaanService";
+
+const aspekOptions = ["Keamanan", "Sosial", "Politik", "Ekonomi", "Lingkungan", "Hukum"];
+const levelKemungkinanOptions = ["Rendah", "Sedang", "Tinggi", "Sangat Tinggi"];
+const levelDampakOptions = ["Rendah", "Sedang", "Tinggi", "Sangat Tinggi"];
 
 const risikoColor: Record<string, string> = {
   Rendah: "text-success-600 bg-success-50 dark:bg-success-900/20",
@@ -18,23 +22,23 @@ const risikoColor: Record<string, string> = {
   "Sangat Tinggi": "text-error-600 bg-error-50 dark:bg-error-900/20",
 };
 
+const matriksRisiko: Record<string, Record<string, string>> = {
+  Rendah: { Rendah: "Rendah", Sedang: "Rendah", Tinggi: "Sedang", "Sangat Tinggi": "Sedang" },
+  Sedang: { Rendah: "Rendah", Sedang: "Sedang", Tinggi: "Tinggi", "Sangat Tinggi": "Tinggi" },
+  Tinggi: { Rendah: "Sedang", Sedang: "Tinggi", Tinggi: "Tinggi", "Sangat Tinggi": "Sangat Tinggi" },
+  "Sangat Tinggi": { Rendah: "Sedang", Sedang: "Tinggi", Tinggi: "Sangat Tinggi", "Sangat Tinggi": "Sangat Tinggi" },
+};
+
+function kalkulasiTingkatRisiko(kemungkinan: string, dampak: string): string {
+  return matriksRisiko[kemungkinan]?.[dampak] ?? "-";
+}
+
 const emptyForm = {
-  periode: "",
-  aspek: "",
-  kabupaten: "",
-  kecamatan: "",
-  desa: "",
-  alamatDetail: "",
-  titikKoordinat: "",
-  sumberInformasi: "",
-  kemungkinanLevel: "",
-  kemungkinanDeskripsi: "",
-  hambatan: "",
-  tantangan: "",
-  gangguan: "",
-  dampakLevel: "",
-  dampakDeskripsi: "",
-  rekomendasi: "",
+  periode: "", aspek: "", kabupaten: "", kecamatan: "", desa: "",
+  alamatDetail: "", titikKoordinat: "", sumberInformasi: "",
+  kemungkinanLevel: "", kemungkinanDeskripsi: "",
+  hambatan: "", tantangan: "", gangguan: "",
+  dampakLevel: "", dampakDeskripsi: "", rekomendasi: "",
 };
 
 export default function KewaspadaanForm() {
@@ -44,37 +48,36 @@ export default function KewaspadaanForm() {
 
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const tingkatRisiko = form.kemungkinanLevel && form.dampakLevel
-    ? kalkulasiTingkatRisiko(form.kemungkinanLevel, form.dampakLevel)
-    : "-";
+    ? kalkulasiTingkatRisiko(form.kemungkinanLevel, form.dampakLevel) : "-";
 
   useEffect(() => {
     if (isEdit && id) {
-      const found = mockKewaspadaan.find((d) => d.id === id);
-      if (found) {
+      setLoading(true);
+      kewaspadaanService.getById(id).then((data) => {
         setForm({
-          periode: found.periode,
-          aspek: found.aspek,
-          kabupaten: found.kabupaten,
-          kecamatan: found.kecamatan,
-          desa: found.desa,
-          alamatDetail: found.alamatDetail,
-          titikKoordinat: found.titikKoordinat,
-          sumberInformasi: found.sumberInformasi,
-          kemungkinanLevel: found.kemungkinanAncaman.level,
-          kemungkinanDeskripsi: found.kemungkinanAncaman.deskripsi,
-          hambatan: found.hambatan,
-          tantangan: found.tantangan,
-          gangguan: found.gangguan,
-          dampakLevel: found.prediksiDampak.level,
-          dampakDeskripsi: found.prediksiDampak.deskripsi,
-          rekomendasi: found.rekomendasi,
+          periode: data.periode,
+          aspek: data.aspek,
+          kabupaten: data.kabupaten,
+          kecamatan: data.kecamatan,
+          desa: data.desa,
+          alamatDetail: data.alamatDetail || "",
+          titikKoordinat: data.titikKoordinat || "",
+          sumberInformasi: data.sumberInformasi,
+          kemungkinanLevel: data.kemungkinanAncaman.level,
+          kemungkinanDeskripsi: data.kemungkinanAncaman.deskripsi,
+          hambatan: data.hambatan || "",
+          tantangan: data.tantangan || "",
+          gangguan: data.gangguan || "",
+          dampakLevel: data.prediksiDampak.level,
+          dampakDeskripsi: data.prediksiDampak.deskripsi,
+          rekomendasi: data.rekomendasi,
         });
-      } else {
-        alert("Data tidak ditemukan");
-        navigate("/kewaspadaan");
-      }
+      }).catch(() => { alert("Data tidak ditemukan"); navigate("/kewaspadaan"); })
+        .finally(() => setLoading(false));
     }
   }, [id, isEdit, navigate]);
 
@@ -86,16 +89,10 @@ export default function KewaspadaanForm() {
   const validate = () => {
     const errs: Record<string, string> = {};
     const required: [string, string][] = [
-      ["periode", "Periode"],
-      ["aspek", "Aspek"],
-      ["kabupaten", "Kabupaten"],
-      ["kecamatan", "Kecamatan"],
-      ["desa", "Desa"],
-      ["sumberInformasi", "Sumber Informasi"],
-      ["kemungkinanLevel", "Level Kemungkinan Ancaman"],
-      ["kemungkinanDeskripsi", "Deskripsi Kemungkinan Ancaman"],
-      ["dampakLevel", "Level Prediksi Dampak"],
-      ["dampakDeskripsi", "Deskripsi Prediksi Dampak"],
+      ["periode", "Periode"], ["aspek", "Aspek"], ["kabupaten", "Kabupaten"],
+      ["kecamatan", "Kecamatan"], ["desa", "Desa"], ["sumberInformasi", "Sumber Informasi"],
+      ["kemungkinanLevel", "Level Kemungkinan Ancaman"], ["kemungkinanDeskripsi", "Deskripsi Kemungkinan Ancaman"],
+      ["dampakLevel", "Level Prediksi Dampak"], ["dampakDeskripsi", "Deskripsi Prediksi Dampak"],
       ["rekomendasi", "Saran & Tindak Lanjut"],
     ];
     required.forEach(([k, label]) => {
@@ -104,49 +101,53 @@ export default function KewaspadaanForm() {
     return errs;
   };
 
-  const handleSubmit = (submitStatus: "draft" | "menunggu") => {
+  const handleSubmit = async (submitStatus: "draft" | "menunggu") => {
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
-    const payload: KewaspadaanDini = {
-      id: isEdit && id ? id : String(Date.now()),
-      periode: form.periode,
-      aspek: form.aspek,
-      kabupaten: form.kabupaten,
-      kecamatan: form.kecamatan,
-      desa: form.desa,
-      alamatDetail: form.alamatDetail,
-      titikKoordinat: form.titikKoordinat,
-      sumberInformasi: form.sumberInformasi,
-      kemungkinanAncaman: { level: form.kemungkinanLevel, deskripsi: form.kemungkinanDeskripsi },
-      hambatan: form.hambatan,
-      tantangan: form.tantangan,
-      gangguan: form.gangguan,
-      prediksiDampak: { level: form.dampakLevel, deskripsi: form.dampakDeskripsi },
-      rekomendasi: form.rekomendasi,
-      tingkatRisiko: tingkatRisiko as LevelRisikoLabel,
-      status: submitStatus,
-      createdBy: "Admin",
-      createdAt: new Date().toISOString(),
-    };
+    setSaving(true);
+    try {
+      const payload = {
+        periode: form.periode,
+        aspek: form.aspek,
+        kabupaten: form.kabupaten,
+        kecamatan: form.kecamatan,
+        desa: form.desa,
+        alamatDetail: form.alamatDetail || undefined,
+        titikKoordinat: form.titikKoordinat || undefined,
+        sumberInformasi: form.sumberInformasi,
+        kemungkinanLevel: form.kemungkinanLevel,
+        kemungkinanDeskripsi: form.kemungkinanDeskripsi,
+        hambatan: form.hambatan || undefined,
+        tantangan: form.tantangan || undefined,
+        gangguan: form.gangguan || undefined,
+        dampakLevel: form.dampakLevel,
+        dampakDeskripsi: form.dampakDeskripsi,
+        rekomendasi: form.rekomendasi,
+        tingkatRisiko: tingkatRisiko as LevelRisikoLabel,
+        status: submitStatus,
+      };
 
-    if (isEdit && id) {
-      const idx = mockKewaspadaan.findIndex((d) => d.id === id);
-      if (idx !== -1) mockKewaspadaan[idx] = { ...mockKewaspadaan[idx], ...payload };
-    } else {
-      mockKewaspadaan.unshift(payload);
-    }
-    navigate("/kewaspadaan");
+      if (isEdit && id) await kewaspadaanService.update(id, payload);
+      else await kewaspadaanService.create(payload);
+      navigate("/kewaspadaan");
+    } catch { alert("Gagal menyimpan data"); }
+    finally { setSaving(false); }
   };
 
   const textareaClass = "w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none";
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-16">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+    </div>
+  );
 
   return (
     <>
       <PageMeta title={isEdit ? "Edit Kewaspadaan Dini" : "Tambah Kewaspadaan Dini"} description="Form Kewaspadaan Dini Daerah" />
       <div className="max-w-3xl space-y-6">
         <PageHeader title={`${isEdit ? "Edit" : "Tambah"} Form Kewaspadaan Dini`} />
-
         <form className="space-y-6">
           <FormSection title="Informasi Umum">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -183,7 +184,6 @@ export default function KewaspadaanForm() {
           </FormSection>
 
           <FormSection title="Analisis Risiko">
-            {/* Kemungkinan Ancaman */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
               <FormField label="Kemungkinan Ancaman — Level" required error={errors.kemungkinanLevel}>
                 <SelectField value={form.kemungkinanLevel} onChange={(v) => set("kemungkinanLevel", v)} options={levelKemungkinanOptions} placeholder="-- Pilih Level --" />
@@ -194,7 +194,6 @@ export default function KewaspadaanForm() {
                 </FormField>
               </div>
             </div>
-
             <FormField label="Hambatan">
               <textarea rows={2} placeholder="Hambatan yang ada..." value={form.hambatan} onChange={(e) => set("hambatan", e.target.value)} className={textareaClass} />
             </FormField>
@@ -204,8 +203,6 @@ export default function KewaspadaanForm() {
             <FormField label="Gangguan">
               <textarea rows={2} placeholder="Gangguan yang terjadi..." value={form.gangguan} onChange={(e) => set("gangguan", e.target.value)} className={textareaClass} />
             </FormField>
-
-            {/* Prediksi Dampak */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
               <FormField label="Prediksi Dampak — Level" required error={errors.dampakLevel}>
                 <SelectField value={form.dampakLevel} onChange={(v) => set("dampakLevel", v)} options={levelDampakOptions} placeholder="-- Pilih Level --" />
@@ -216,12 +213,9 @@ export default function KewaspadaanForm() {
                 </FormField>
               </div>
             </div>
-
             <FormField label="Saran & Tindak Lanjut" required error={errors.rekomendasi}>
               <textarea rows={3} placeholder="Saran & tindak lanjut..." value={form.rekomendasi} onChange={(e) => set("rekomendasi", e.target.value)} className={textareaClass} />
             </FormField>
-
-            {/* Tingkat Risiko kalkulasi */}
             <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tingkat Risiko (Kalkulasi):</span>
               <span className={`px-3 py-1 rounded-full text-sm font-semibold ${tingkatRisiko !== "-" ? risikoColor[tingkatRisiko] : "text-gray-400"}`}>
@@ -231,13 +225,12 @@ export default function KewaspadaanForm() {
             </div>
           </FormSection>
 
-          {/* Actions */}
           <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => handleSubmit("draft")}>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={saving} onClick={() => handleSubmit("draft")}>
               <SaveIcon /> Simpan Draft
             </Button>
-            <Button type="button" size="sm" className="gap-1.5" onClick={() => handleSubmit("menunggu")}>
-              <SaveIcon /> Ajukan Approval
+            <Button type="button" size="sm" className="gap-1.5" disabled={saving} onClick={() => handleSubmit("menunggu")}>
+              <SaveIcon /> {saving ? "Menyimpan..." : "Ajukan Approval"}
             </Button>
             <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/kewaspadaan")}>
               <CloseIcon /> Batal

@@ -1,69 +1,65 @@
-// Auth Context - mockup mode, no API calls
-// Mendukung simulasi multi-level role: Operator, Administrator, User (Pimpinan)
-// Mock login dengan credential statis + RBAC
-
 import { createContext, useContext, useState, type ReactNode } from 'react';
+import api from '../services/api';
 
 export type UserRole = "operator" | "administrator" | "user";
 
-export interface MockUser {
+export interface AuthUser {
+  id: string;
+  username: string;
   fullName: string;
   email: string;
   roleName: string;
+  roleId: string;
   role: UserRole;
+  permissions: MenuPermission[];
 }
 
-interface MockCredential {
-  username: string;
-  password: string;
-  role: UserRole;
+export interface MenuPermission {
+  menuId: string;
+  menuName: string;
+  canView: boolean;
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+  hasAccess: boolean;
 }
 
 interface AuthContextType {
-  user: MockUser;
+  user: AuthUser;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => { success: boolean; message?: string };
+  login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
-  switchRole: (role: UserRole) => void;
 }
 
-const roleProfiles: Record<UserRole, MockUser> = {
-  operator: {
-    fullName: "Budi Santoso",
-    email: "operator@sipintar.go.id",
-    roleName: "Operator",
-    role: "operator",
-  },
-  administrator: {
-    fullName: "Admin SIPINTAR",
-    email: "admin@sipintar.go.id",
-    roleName: "Administrator",
-    role: "administrator",
-  },
-  user: {
-    fullName: "Bupati Belitung Timur",
-    email: "pimpinan@sipintar.go.id",
-    roleName: "User (Pimpinan)",
-    role: "user",
-  },
-};
-
-/**
- * Mock credentials untuk login.
- * Gunakan salah satu dari credential berikut:
- * - admin / admin123     → Administrator
- * - operator / operator123 → Operator
- * - pimpinan / pimpinan123 → User (Pimpinan)
- */
-export const mockCredentials: MockCredential[] = [
-  { username: "admin", password: "admin123", role: "administrator" },
-  { username: "operator", password: "operator123", role: "operator" },
-  { username: "pimpinan", password: "pimpinan123", role: "user" },
+// Demo credentials — kept for quick login buttons
+export const mockCredentials = [
+  { username: "admin", password: "admin123", role: "administrator" as UserRole },
+  { username: "operator", password: "operator123", role: "operator" as UserRole },
+  { username: "pimpinan", password: "pimpinan123", role: "user" as UserRole },
 ];
 
 const AUTH_STORAGE_KEY = "sipintar_auth";
+const TOKEN_KEY = "sipintar_token";
 
-function getStoredAuth(): { isAuthenticated: boolean; role: UserRole } {
+function mapRoleNameToRole(roleName: string): UserRole {
+  const lower = roleName.toLowerCase();
+  if (lower.includes("admin")) return "administrator";
+  if (lower.includes("operator")) return "operator";
+  return "user";
+}
+
+const defaultUser: AuthUser = {
+  id: '',
+  username: '',
+  fullName: '',
+  email: '',
+  roleName: '',
+  roleId: '',
+  role: 'administrator',
+  permissions: [],
+};
+
+function getStoredAuth(): { isAuthenticated: boolean; user: AuthUser } {
   try {
     const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
     if (stored) {
@@ -72,57 +68,95 @@ function getStoredAuth(): { isAuthenticated: boolean; role: UserRole } {
   } catch {
     // ignore parse errors
   }
-  return { isAuthenticated: false, role: "administrator" };
+  return { isAuthenticated: false, user: defaultUser };
 }
 
-function setStoredAuth(isAuthenticated: boolean, role: UserRole) {
-  sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ isAuthenticated, role }));
+function setStoredAuth(isAuthenticated: boolean, user: AuthUser) {
+  sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ isAuthenticated, user }));
 }
 
 function clearStoredAuth() {
   sessionStorage.removeItem(AUTH_STORAGE_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
 }
 
 const AuthContext = createContext<AuthContextType>({
-  user: roleProfiles.administrator,
+  user: defaultUser,
   isAuthenticated: false,
-  login: () => ({ success: false }),
+  login: async () => ({ success: false }),
   logout: () => {},
-  switchRole: () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const stored = getStoredAuth();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(stored.isAuthenticated);
-  const [currentRole, setCurrentRole] = useState<UserRole>(stored.role);
+  const [currentUser, setCurrentUser] = useState<AuthUser>(stored.user);
 
-  const login = (username: string, password: string): { success: boolean; message?: string } => {
-    const found = mockCredentials.find(
-      (c) => c.username === username && c.password === password
-    );
+  const login = async (username: string, password: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      // 1. Login to get token
+      const loginRes = await api.post('/api/auth/login', { username, password });
+      const loginData = loginRes.data;
 
-    if (found) {
+      if (!loginData.success) {
+        return { success: false, message: loginData.message || 'Login gagal' };
+      }
+
+      const { token, fullName, email, roleName, roleId, userId } = loginData.data;
+
+      // Store token
+      sessionStorage.setItem(TOKEN_KEY, token);
+
+      // 2. Fetch user permissions
+      let permissions: MenuPermission[] = [];
+      try {
+        const meRes = await api.get('/api/auth/me');
+        if (meRes.data.success) {
+          permissions = meRes.data.data.permissions || [];
+        }
+      } catch {
+        // Non-critical — continue without permissions
+      }
+
+      const user: AuthUser = {
+        id: userId,
+        username,
+        fullName,
+        email,
+        roleName,
+        roleId,
+        role: mapRoleNameToRole(roleName),
+        permissions,
+      };
+
       setIsAuthenticated(true);
-      setCurrentRole(found.role);
-      setStoredAuth(true, found.role);
-      return { success: true };
-    }
+      setCurrentUser(user);
+      setStoredAuth(true, user);
 
-    return { success: false, message: "Username atau password salah" };
+      return { success: true };
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosErr.response?.status === 401) {
+          return { success: false, message: 'Username atau password salah' };
+        }
+        if (axiosErr.response?.status === 403) {
+          return { success: false, message: 'Akun tidak aktif' };
+        }
+        return { success: false, message: axiosErr.response?.data?.message || 'Login gagal' };
+      }
+      return { success: false, message: 'Tidak dapat terhubung ke server' };
+    }
   };
 
   const logout = () => {
     setIsAuthenticated(false);
+    setCurrentUser(defaultUser);
     clearStoredAuth();
   };
 
-  const switchRole = (role: UserRole) => {
-    setCurrentRole(role);
-    setStoredAuth(true, role);
-  };
-
   return (
-    <AuthContext.Provider value={{ user: roleProfiles[currentRole], isAuthenticated, login, logout, switchRole }}>
+    <AuthContext.Provider value={{ user: currentUser, isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

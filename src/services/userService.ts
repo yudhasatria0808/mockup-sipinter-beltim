@@ -1,33 +1,44 @@
-// User Service - mockup mode, static data
-import type { User, UserDetail } from '../types/user';
+import api from './api';
+import type { User, UserDetail, UserCreateRequest, UserUpdateRequest, UserResetPasswordRequest } from '../types/user';
 import type { PaginatedResponse } from '../types';
-
-const mockUsers: User[] = [
-  { id: '1', username: 'admin', fullName: 'Admin SIPINTAR', email: 'admin@sipintar.go.id', isActive: true, roleId: '1', roleName: 'Administrator', createdDate: '2024-01-01T00:00:00Z' },
-  { id: '2', username: 'operator1', fullName: 'Budi Santoso', email: 'operator@sipintar.go.id', isActive: true, roleId: '2', roleName: 'Operator', createdDate: '2024-02-01T00:00:00Z' },
-  { id: '3', username: 'viewer1', fullName: 'Bupati Belitung Timur', email: 'pimpinan@sipintar.go.id', isActive: true, roleId: '3', roleName: 'Viewer', createdDate: '2024-03-01T00:00:00Z' },
-  { id: '4', username: 'operator2', fullName: 'Siti Rahayu', email: 'siti@sipintar.go.id', isActive: true, roleId: '2', roleName: 'Operator', createdDate: '2024-04-15T00:00:00Z' },
-  { id: '5', username: 'viewer2', fullName: 'Camat Manggar', email: 'camat.manggar@sipintar.go.id', isActive: false, roleId: '3', roleName: 'Viewer', createdDate: '2024-05-10T00:00:00Z' },
-];
 
 export const userService = {
   async getPaginated(req: { generalSearch?: string; pageNumber: number; pageSize: number }): Promise<PaginatedResponse<User>> {
-    const filtered = mockUsers.filter(u =>
-      !req.generalSearch ||
-      u.fullName.toLowerCase().includes(req.generalSearch.toLowerCase()) ||
-      u.username.toLowerCase().includes(req.generalSearch.toLowerCase())
-    );
-    return { data: filtered, currentPage: req.pageNumber, pageSize: req.pageSize, totalPages: 1, totalCount: filtered.length };
+    const params = new URLSearchParams();
+    if (req.generalSearch) params.append('generalSearch', req.generalSearch);
+    params.append('pageNumber', req.pageNumber.toString());
+    params.append('pageSize', req.pageSize.toString());
+
+    const res = await api.get(`/api/users?${params.toString()}`);
+    return res.data;
   },
+
   async getById(id: string): Promise<UserDetail> {
-    const user = mockUsers.find(u => u.id === id) ?? mockUsers[0];
-    return { ...user, mustChangePassword: false, updatedDate: null };
+    const res = await api.get(`/api/users/${id}`);
+    return res.data.data;
   },
-  async create(_data: unknown): Promise<UserDetail> { return { ...mockUsers[0], mustChangePassword: false, updatedDate: null }; },
-  async update(_id: string, _data: unknown): Promise<UserDetail> { return { ...mockUsers[0], mustChangePassword: false, updatedDate: null }; },
-  async delete(_id: string): Promise<void> {},
-  async toggleStatus(_id: string): Promise<void> {},
-  async resetPassword(_id: string, _data: unknown): Promise<void> {},
+
+  async create(data: UserCreateRequest): Promise<UserDetail> {
+    const res = await api.post('/api/users', data);
+    return res.data.data;
+  },
+
+  async update(id: string, data: UserUpdateRequest): Promise<UserDetail> {
+    const res = await api.put(`/api/users/${id}`, data);
+    return res.data.data;
+  },
+
+  async delete(id: string): Promise<void> {
+    await api.delete(`/api/users/${id}`);
+  },
+
+  async toggleStatus(id: string): Promise<void> {
+    await api.post(`/api/users/${id}/toggle-status`);
+  },
+
+  async resetPassword(id: string, data: UserResetPasswordRequest): Promise<void> {
+    await api.post(`/api/users/${id}/reset-password`, data);
+  },
 };
 
 export default userService;

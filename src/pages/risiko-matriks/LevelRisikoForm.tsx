@@ -5,7 +5,7 @@ import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import { CheckIcon as SaveIcon, CloseIcon } from "../../components/icons";
-import { mockLevelRisiko } from "./mockData";
+import { levelRisikoService } from "../../services/masterDataService";
 
 export default function LevelRisikoForm() {
   const navigate = useNavigate();
@@ -17,12 +17,16 @@ export default function LevelRisikoForm() {
   const [skorMin, setSkorMin] = useState<number | "">(1);
   const [skorMax, setSkorMax] = useState<number | "">(4);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isEdit && id) {
-      const found = mockLevelRisiko.find((a) => a.id === id);
-      if (found) { setNama(found.nama); setWarna(found.warna); setSkorMin(found.skorMin); setSkorMax(found.skorMax); }
-      else { alert("Data tidak ditemukan"); navigate("/risiko/level"); }
+      setLoading(true);
+      levelRisikoService.getById(id)
+        .then((data) => { setNama(data.nama); setWarna(data.warna); setSkorMin(data.skorMin); setSkorMax(data.skorMax); })
+        .catch(() => { alert("Data tidak ditemukan"); navigate("/risiko/level"); })
+        .finally(() => setLoading(false));
     }
   }, [id, isEdit, navigate]);
 
@@ -35,27 +39,27 @@ export default function LevelRisikoForm() {
     return errs;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-    const entry = { id: id || String(Date.now()), nama, warna, skorMin: Number(skorMin), skorMax: Number(skorMax) };
-    if (isEdit && id) {
-      const idx = mockLevelRisiko.findIndex((a) => a.id === id);
-      if (idx !== -1) mockLevelRisiko[idx] = entry;
-    } else {
-      mockLevelRisiko.push(entry);
-    }
-    navigate("/risiko/level");
+    setSaving(true);
+    try {
+      const payload = { nama: nama.trim(), warna, skorMin: Number(skorMin), skorMax: Number(skorMax) };
+      if (isEdit && id) await levelRisikoService.update(id, payload);
+      else await levelRisikoService.create(payload);
+      navigate("/risiko/level");
+    } catch { alert("Gagal menyimpan data"); }
+    finally { setSaving(false); }
   };
+
+  if (loading) return <div className="flex items-center justify-center py-16"><div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" /></div>;
 
   return (
     <>
       <PageMeta title={isEdit ? "Edit Level Risiko" : "Tambah Level Risiko"} description="Form Level Risiko" />
       <div className="max-w-xl space-y-6">
-        <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">
-          {isEdit ? "Edit Level Risiko" : "Tambah Level Risiko"}
-        </h2>
+        <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">{isEdit ? "Edit Level Risiko" : "Tambah Level Risiko"}</h2>
         <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
@@ -89,10 +93,8 @@ export default function LevelRisikoForm() {
               </div>
             </div>
             <div className="flex gap-2 pt-2">
-              <Button type="submit" size="sm" className="gap-1.5"><SaveIcon /> Simpan</Button>
-              <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/risiko/level")}>
-                <CloseIcon /> Batal
-              </Button>
+              <Button type="submit" size="sm" className="gap-1.5" disabled={saving}><SaveIcon /> {saving ? "Menyimpan..." : "Simpan"}</Button>
+              <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/risiko/level")}><CloseIcon /> Batal</Button>
             </div>
           </form>
         </div>

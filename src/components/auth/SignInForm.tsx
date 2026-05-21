@@ -16,7 +16,7 @@ export default function SignInForm() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -26,16 +26,16 @@ export default function SignInForm() {
     }
 
     setIsLoading(true);
-    // Simulate brief loading for UX feel
-    setTimeout(() => {
-      const result = login(formData.username, formData.password);
+    try {
+      const result = await login(formData.username, formData.password);
       if (result.success) {
         navigate("/dashboard");
       } else {
         setError(result.message || "Login gagal");
       }
+    } finally {
       setIsLoading(false);
-    }, 600);
+    }
   };
 
   const handleChange =
