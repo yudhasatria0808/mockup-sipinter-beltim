@@ -33,6 +33,7 @@ interface AuthContextType {
 
 // Demo credentials — kept for quick login buttons
 export const mockCredentials = [
+  { username: "superadmin", password: "superadmin123", role: "administrator" as UserRole },
   { username: "admin", password: "admin123", role: "administrator" as UserRole },
   { username: "operator", password: "operator123", role: "operator" as UserRole },
   { username: "pimpinan", password: "pimpinan123", role: "user" as UserRole },
