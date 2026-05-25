@@ -9,6 +9,7 @@ import { DataTable, type DataTableColumn } from "../../components/ui/table";
 import { PlusIcon, SearchIcon, EditIcon, TrashIcon, EyeIcon } from "../../components/icons";
 import type { StatusApproval, LevelRisikoLabel } from "../../types/potensi-konflik";
 import { potensiKonflikService } from "../../services/potensiKonflikService";
+import { useAuth } from "../../context/AuthContext";
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -28,6 +29,8 @@ interface ListItem { id: string; periode: string; aspek: string; namaPotensiKonf
 
 export default function PotensiKonflikList() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canCreate = user.permissions.some(p => p.menuName === "Form Potensi Konflik" && p.canCreate);
   const [data, setData] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -67,7 +70,7 @@ export default function PotensiKonflikList() {
     <>
       <PageMeta title="Form Potensi Konflik" description="Daftar Form Potensi Konflik" />
       <div className="space-y-4">
-        <PageHeader title="Form Potensi Konflik" actions={<Button size="sm" onClick={() => navigate("/potensi-konflik/create")} className="gap-1.5"><PlusIcon /> Tambah Data</Button>} />
+        <PageHeader title="Form Potensi Konflik" actions={canCreate ? <Button size="sm" onClick={() => navigate("/potensi-konflik/create")} className="gap-1.5"><PlusIcon /> Tambah Data</Button> : undefined} />
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><SearchIcon /></span>

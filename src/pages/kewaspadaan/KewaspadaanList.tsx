@@ -9,6 +9,7 @@ import { DataTable, type DataTableColumn } from "../../components/ui/table";
 import { PlusIcon, SearchIcon, EditIcon, TrashIcon, EyeIcon } from "../../components/icons";
 import type { StatusApproval, LevelRisikoLabel } from "../../types/kewaspadaan";
 import { kewaspadaanService } from "../../services/kewaspadaanService";
+import { useAuth } from "../../context/AuthContext";
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -34,6 +35,8 @@ interface ListItem {
 
 export default function KewaspadaanList() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canCreate = user.permissions.some(p => p.menuName === "Form Kewaspadaan Dini" && p.canCreate);
   const [data, setData] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -103,7 +106,7 @@ export default function KewaspadaanList() {
       <PageMeta title="Form Kewaspadaan Dini" description="Data Kewaspadaan Dini Daerah" />
       <div className="space-y-4">
         <PageHeader title="Form Kewaspadaan Dini" actions={
-          <Button size="sm" onClick={() => navigate("/kewaspadaan/create")} className="gap-1.5"><PlusIcon /> Tambah</Button>
+          canCreate ? <Button size="sm" onClick={() => navigate("/kewaspadaan/create")} className="gap-1.5"><PlusIcon /> Tambah</Button> : undefined
         } />
         <div className="flex flex-wrap gap-2">
           <div className="flex-1 min-w-[180px] max-w-xs">

@@ -5,6 +5,7 @@ import Button from "../../components/ui/button/Button";
 import { EditIcon, CloseIcon, CheckIcon } from "../../components/icons";
 import type { WNA, StatusApproval, StatusTinggal } from "../../types/wna";
 import { wnaService } from "../../services/wnaService";
+import { useAuth } from "../../context/AuthContext";
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -43,6 +44,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function WNADetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [data, setData] = useState<WNA | null>(null);
   const [loading, setLoading] = useState(true);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -92,6 +94,7 @@ export default function WNADetail() {
 
   const s = statusBadge[data.status];
   const isExpired = new Date(data.masaBerlakuVisa) < new Date();
+  const canApprove = user.permissions.some(p => p.menuName === "Form WNA" && p.canApprove);
 
   return (
     <>
@@ -113,7 +116,7 @@ export default function WNADetail() {
                 <EditIcon /> Edit
               </Button>
             )}
-            {data.status === "menunggu" && (
+            {data.status === "menunggu" && canApprove && (
               <>
                 <Button
                   size="sm"
@@ -212,7 +215,7 @@ export default function WNADetail() {
                 {s.label}
               </span>
             } />
-            {data.approvedBy && <Row label="Diproses oleh" value={data.approvedBy} />}
+            {data.approvedBy && <Row label="Diproses oleh" value={`${data.approvedBy}${data.approvedByRole ? ` (${data.approvedByRole})` : ""}`} />}
             {data.approvedAt && (
               <Row label="Tanggal Proses" value={new Date(data.approvedAt).toLocaleString("id-ID")} />
             )}

@@ -33,7 +33,6 @@ const navGroups: NavGroup[] = [
     icon: <BoxCubeIcon />,
     roles: ["administrator"],
     items: [
-      { label: "Dashboard", path: "/dashboard" },
       { label: "Roles", path: "/roles" },
       { label: "Users", path: "/users" },
       { label: "Audit Trail", path: "/audit-trail" },
@@ -111,7 +110,6 @@ const navGroups: NavGroup[] = [
     icon: <PieChartIcon />,
     roles: ["user"],
     items: [
-      { label: "Dashboard", path: "/dashboard" },
       { label: "EWS Kewaspadaan Dini", path: "/ews" },
       { label: "EWS Potensi Konflik", path: "/ews/potensi-konflik" },
       { label: "EWS Peristiwa Konflik", path: "/ews/peristiwa-konflik" },
@@ -125,6 +123,16 @@ const navGroups: NavGroup[] = [
     roles: ["user", "administrator"],
     items: [
       { label: "Keputusan & Tindak Lanjut", path: "/tindak-lanjut" },
+    ],
+  },
+  {
+    label: "Forum Forkopimda",
+    icon: <PlugInIcon />,
+    roles: ["user", "operator", "administrator"],
+    items: [
+      { label: "Diskusi", path: "/forum/topik" },
+      { label: "Arahan & Disposisi", path: "/forum/arahan" },
+      { label: "Pengumuman", path: "/forum/pengumuman" },
     ],
   },
   {
@@ -142,6 +150,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "General Setting", path: "/general-setting" },
       { label: "Pengaturan Tampilan", path: "/pengaturan-tampilan" },
+      { label: "Backup & Restore", path: "/backup-restore" },
     ],
   },
 ];
@@ -183,7 +192,7 @@ const AppSidebar: React.FC = () => {
       {/* Logo */}
       <div className={`py-6 flex ${!isExpand ? "lg:justify-center" : "justify-start"}`}>
         <Link to="/" className="flex items-center gap-3">
-          <img className="h-8" src="/images/logo/logo-beltim.png" alt="Logo Belitung Timur" />
+          <img className="h-8" src="/images/logo/LOGO BELTIM PNG.png" alt="Logo Belitung Timur" />
           {isExpand && (
             <span className="text-sm font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent dark:from-primary-300 dark:to-primary-500">SIPINTAR</span>
           )}
@@ -200,6 +209,28 @@ const AppSidebar: React.FC = () => {
 
       <div className="flex flex-col overflow-y-auto no-scrollbar h-[calc(100vh-140px)]">
         <nav className="flex flex-col gap-0.5">
+          {/* Dashboard - standalone link */}
+          <div className="mb-2">
+            <Link
+              to="/dashboard"
+              title={!isExpand ? "Dashboard" : undefined}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
+                ${isActive("/dashboard")
+                  ? "bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-md shadow-primary-600/25 dark:from-primary-600 dark:to-primary-800 dark:shadow-primary-600/15"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-primary-50/60 hover:text-primary-800 dark:hover:bg-primary-500/5 dark:hover:text-primary-300"
+                }
+                ${!isExpand ? "lg:justify-center" : ""}
+              `}
+            >
+              <span className={`shrink-0 size-5 ${isActive("/dashboard") ? "text-white/80" : ""}`}>
+                <GridIcon />
+              </span>
+              {isExpand && (
+                <span className="text-sm font-semibold">Dashboard</span>
+              )}
+            </Link>
+          </div>
+
           {visibleGroups.map((group) => {
             const isOpen = openGroups[group.label];
             const groupActive = isGroupActive(group);

@@ -1,10 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Link } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
+
+const logos = [
+  { src: "/images/logo/LOGO BELTIM PNG.png", alt: "Logo Belitung Timur" },
+  { src: "/images/logo/LOGO KESBANGPOL BELTIM.png", alt: "Logo Kesbangpol Beltim" },
+  { src: "/images/logo/LOGO BIN.png", alt: "Logo BIN" },
+  { src: "/images/logo/LOGO KODIM.png", alt: "Logo Kodim" },
+  { src: "/images/logo/LOGO KEJAKSAAN NEGERI PNG.png", alt: "Logo Kejaksaan Negeri" },
+  { src: "/images/logo/LOGO DPRD BELTIM.png", alt: "Logo DPRD Beltim" },
+  { src: "/images/logo/LOGO LANUD PNG.png", alt: "Logo Lanud" },
+  { src: "/images/logo/LOGO YONIF 845.png", alt: "Logo Yonif 845" },
+];
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
@@ -41,18 +51,19 @@ const AppHeader: React.FC = () => {
   }, []);
 
   return (
-    <header className="sticky top-0 z-99999 flex w-full border-b border-primary-100/40 bg-gradient-to-r from-white/90 via-primary-25/40 to-white/90 backdrop-blur-xl dark:border-gray-800 dark:from-gray-900/90 dark:via-primary-950/20 dark:to-gray-900/90">
-      <div className="flex grow flex-col items-center justify-between lg:flex-row lg:px-6">
-        <div className="flex w-full items-center justify-between gap-2 px-3 py-3 border-b border-gray-200/80 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
+    <header className="sticky top-2 z-99999 mx-3 lg:mx-6 rounded-2xl border border-primary-100/50 bg-white/80 backdrop-blur-xl shadow-lg shadow-primary-100/20 dark:border-gray-700/50 dark:bg-gray-900/80 dark:shadow-gray-900/30">
+      <div className="flex items-center justify-between px-3 py-2 lg:px-5">
+        {/* Left: Hamburger + Logos */}
+        <div className="flex items-center gap-3">
           <button
-            className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 transition-all hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200 lg:h-11 lg:w-11 lg:border lg:border-gray-200 lg:dark:border-gray-700"
+            className="flex items-center justify-center w-9 h-9 rounded-xl text-gray-500 transition-all hover:bg-primary-50 hover:text-primary-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-primary-400"
             onClick={handleToggle}
             aria-label="Toggle Sidebar"
           >
             {isMobileOpen ? (
               <svg
-                width="24"
-                height="24"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -82,21 +93,45 @@ const AppHeader: React.FC = () => {
             )}
           </button>
 
-          <Link to="/" className="lg:hidden">
-            <img
-              className="h-8"
-              src="/images/logo/logo-beltim.png"
-              alt="Logo Belitung Timur"
-            />
-          </Link>
+          {/* Divider */}
+          <div className="hidden lg:block w-px h-8 bg-gray-200 dark:bg-gray-700" />
 
+          {/* Logo Instansi */}
+          <div className="hidden lg:flex items-center gap-1.5">
+            {logos.map((logo, index) => (
+              <div
+                key={index}
+                className="group relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 hover:bg-primary-50/80 hover:shadow-md hover:shadow-primary-200/30 hover:scale-110 dark:hover:bg-gray-800/80 dark:hover:shadow-primary-900/20 cursor-pointer"
+              >
+                <img
+                  className="h-7 w-7 object-contain transition-transform duration-300 group-hover:scale-110"
+                  src={logo.src}
+                  alt={logo.alt}
+                />
+                {/* Tooltip */}
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1 text-[10px] font-medium text-white opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:-bottom-9 pointer-events-none dark:bg-gray-700 shadow-lg">
+                  {logo.alt.replace("Logo ", "")}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2">
+          <ThemeToggleButton />
+          <NotificationDropdown />
+          <div className="hidden lg:block w-px h-8 bg-gray-200 dark:bg-gray-700" />
+          <UserDropdown />
+
+          {/* Mobile menu toggle */}
           <button
             onClick={toggleApplicationMenu}
-            className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-700 transition-all hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 lg:hidden"
+            className="flex items-center justify-center w-9 h-9 rounded-xl text-gray-700 transition-all hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 lg:hidden"
           >
             <svg
-              width="24"
-              height="24"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -110,18 +145,21 @@ const AppHeader: React.FC = () => {
             </svg>
           </button>
         </div>
-        <div
-          className={`${
-            isApplicationMenuOpen ? "flex" : "hidden"
-          } items-center justify-between w-full gap-4 px-5 py-4 lg:flex lg:justify-end lg:px-0 lg:shadow-none`}
-        >
-          <div className="flex items-center gap-2 2xsm:gap-3">
-            <ThemeToggleButton />
-            <NotificationDropdown />
-          </div>
-          <UserDropdown />
-        </div>
       </div>
+
+      {/* Mobile: Logo strip (visible when menu open) */}
+      {isApplicationMenuOpen && (
+        <div className="flex items-center justify-center gap-2 px-3 pb-3 lg:hidden">
+          {logos.map((logo, index) => (
+            <img
+              key={index}
+              className="h-7 w-7 object-contain"
+              src={logo.src}
+              alt={logo.alt}
+            />
+          ))}
+        </div>
+      )}
     </header>
   );
 };

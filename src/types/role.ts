@@ -27,6 +27,7 @@ export interface RoleMenuPermission {
   canCreate: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  canApprove: boolean;
   hasAccess: boolean;
   idx: number;
   child: RoleMenuPermission[];
@@ -51,4 +52,5 @@ export interface RoleMenuPermissionRequest {
   canCreate: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  canApprove: boolean;
 }

@@ -44,6 +44,7 @@ export interface PeristiwaKonflik {
   status: StatusApproval;
   catatanApproval?: string;
   approvedBy?: string;
+  approvedByRole?: string;
   approvedAt?: string;
 
   // Meta

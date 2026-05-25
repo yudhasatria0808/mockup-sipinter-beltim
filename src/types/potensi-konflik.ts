@@ -37,6 +37,7 @@ export interface PotensiKonflik {
   status: StatusApproval;
   catatanApproval?: string;
   approvedBy?: string;
+  approvedByRole?: string;
   approvedAt?: string;
 
   // Meta

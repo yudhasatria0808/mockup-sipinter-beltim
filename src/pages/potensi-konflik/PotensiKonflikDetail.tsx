@@ -5,6 +5,7 @@ import Button from "../../components/ui/button/Button";
 import { EditIcon, CloseIcon, CheckIcon } from "../../components/icons";
 import type { PotensiKonflik, StatusApproval, LevelRisikoLabel } from "../../types/potensi-konflik";
 import { potensiKonflikService } from "../../services/potensiKonflikService";
+import { useAuth } from "../../context/AuthContext";
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -27,6 +28,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function PotensiKonflikDetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [data, setData] = useState<PotensiKonflik | null>(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -42,6 +44,7 @@ export default function PotensiKonflikDetail() {
   if (!data) return <div className="text-center py-20 text-gray-500">Data tidak ditemukan. <button onClick={() => navigate("/potensi-konflik")} className="text-brand-500 underline">Kembali</button></div>;
 
   const s = statusBadge[data.status];
+  const canApprove = user.permissions.some(p => p.menuName === "Form Potensi Konflik" && p.canApprove);
 
   return (
     <>
@@ -51,7 +54,7 @@ export default function PotensiKonflikDetail() {
           <div><h2 className="text-base font-semibold text-gray-800 dark:text-white/90">Detail Potensi Konflik</h2><span className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span></div>
           <div className="flex gap-2 flex-wrap">
             {data.status === "draft" && <Button size="sm" variant="outline" onClick={() => navigate(`/potensi-konflik/edit/${data.id}`)} className="gap-1.5"><EditIcon /> Edit</Button>}
-            {data.status === "menunggu" && (<><Button size="sm" onClick={() => { setAction("disetujui"); setShowModal(true); }} className="gap-1.5 bg-success-500 hover:bg-success-600"><CheckIcon /> Setujui</Button><Button size="sm" variant="outline" onClick={() => { setAction("ditolak"); setShowModal(true); }} className="gap-1.5 border-error-300 text-error-600 hover:bg-error-50"><CloseIcon /> Tolak</Button></>)}
+            {data.status === "menunggu" && canApprove && (<><Button size="sm" onClick={() => { setAction("disetujui"); setShowModal(true); }} className="gap-1.5 bg-success-500 hover:bg-success-600"><CheckIcon /> Setujui</Button><Button size="sm" variant="outline" onClick={() => { setAction("ditolak"); setShowModal(true); }} className="gap-1.5 border-error-300 text-error-600 hover:bg-error-50"><CloseIcon /> Tolak</Button></>)}
             <Button size="sm" variant="outline" onClick={() => navigate("/potensi-konflik")}>Kembali</Button>
           </div>
         </div>
@@ -78,7 +81,7 @@ export default function PotensiKonflikDetail() {
           <Row label="Tingkat Risiko" value={<span className={`px-3 py-1 rounded-full text-sm font-semibold ${risikoColor[data.tingkatRisiko]}`}>{data.tingkatRisiko}</span>} />
         </Section>
 
-        {(data.status === "disetujui" || data.status === "ditolak") && (<Section title="Informasi Approval"><Row label="Status" value={<span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span>} />{data.approvedBy && <Row label="Diproses oleh" value={data.approvedBy} />}{data.approvedAt && <Row label="Tanggal Proses" value={new Date(data.approvedAt).toLocaleString("id-ID")} />}{data.catatanApproval && <Row label="Catatan" value={data.catatanApproval} />}</Section>)}
+        {(data.status === "disetujui" || data.status === "ditolak") && (<Section title="Informasi Approval"><Row label="Status" value={<span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span>} />{data.approvedBy && <Row label="Diproses oleh" value={`${data.approvedBy}${data.approvedByRole ? ` (${data.approvedByRole})` : ""}`} />}{data.approvedAt && <Row label="Tanggal Proses" value={new Date(data.approvedAt).toLocaleString("id-ID")} />}{data.catatanApproval && <Row label="Catatan" value={data.catatanApproval} />}</Section>)}
 
         <Section title="Informasi Pelaporan"><Row label="Dibuat oleh" value={data.createdBy} /><Row label="Tanggal Dibuat" value={new Date(data.createdAt).toLocaleString("id-ID")} /></Section>
       </div>

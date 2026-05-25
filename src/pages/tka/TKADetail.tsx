@@ -5,6 +5,7 @@ import Button from "../../components/ui/button/Button";
 import { EditIcon, CloseIcon, CheckIcon } from "../../components/icons";
 import type { TKA, StatusApproval, JenisIzinTinggal } from "../../types/tka";
 import { tkaService } from "../../services/tkaService";
+import { useAuth } from "../../context/AuthContext";
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -42,6 +43,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function TKADetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [data, setData] = useState<TKA | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -83,6 +85,7 @@ export default function TKADetail() {
 
   const s = statusBadge[data.status];
   const isIMTAExpired = new Date(data.tanggalBerakhirIMTA) < new Date();
+  const canApprove = user.permissions.some(p => p.menuName === "Form TKA" && p.canApprove);
 
   return (
     <>
@@ -104,7 +107,7 @@ export default function TKADetail() {
                 <EditIcon /> Edit
               </Button>
             )}
-            {data.status === "menunggu" && (
+            {data.status === "menunggu" && canApprove && (
               <>
                 <Button
                   size="sm"
@@ -220,7 +223,7 @@ export default function TKADetail() {
                 </span>
               }
             />
-            {data.approvedBy && <Row label="Diproses oleh" value={data.approvedBy} />}
+            {data.approvedBy && <Row label="Diproses oleh" value={`${data.approvedBy}${data.approvedByRole ? ` (${data.approvedByRole})` : ""}`} />}
             {data.approvedAt && (
               <Row label="Tanggal Proses" value={new Date(data.approvedAt).toLocaleString("id-ID")} />
             )}

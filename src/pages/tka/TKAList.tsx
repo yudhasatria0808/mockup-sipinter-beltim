@@ -9,6 +9,7 @@ import { DataTable, type DataTableColumn } from "../../components/ui/table";
 import { PlusIcon, SearchIcon, EditIcon, TrashIcon, EyeIcon } from "../../components/icons";
 import type { StatusApproval, JenisIzinTinggal } from "../../types/tka";
 import { tkaService } from "../../services/tkaService";
+import { useAuth } from "../../context/AuthContext";
 
 const jenisIzinTinggalOptions = ["Visa", "KITAS", "KITAP"];
 
@@ -37,6 +38,8 @@ interface ListItem {
 
 export default function TKAList() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canCreate = user.permissions.some(p => p.menuName === "Form TKA" && p.canCreate);
   const [data, setData] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -144,9 +147,9 @@ export default function TKAList() {
         <PageHeader
           title="Form Tenaga Kerja Asing (TKA)"
           actions={
-            <Button size="sm" onClick={() => navigate("/tka/create")} className="gap-1.5">
+            canCreate ? <Button size="sm" onClick={() => navigate("/tka/create")} className="gap-1.5">
               <PlusIcon /> Tambah Data
-            </Button>
+            </Button> : undefined
           }
         />
 

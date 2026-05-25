@@ -182,6 +182,7 @@ export default function RoleDetail() {
                             <th className="w-14 py-2 text-center font-medium">Create</th>
                             <th className="w-14 py-2 text-center font-medium">Update</th>
                             <th className="w-14 py-2 text-center font-medium">Delete</th>
+                            <th className="w-14 py-2 text-center font-medium">Approve</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -225,6 +226,9 @@ function PermissionViewRow({ menu, isChild = false }: { menu: RoleMenuPermission
       </td>
       <td className="py-1.5 text-center">
         <PermissionBadge active={menu.canDelete} />
+      </td>
+      <td className="py-1.5 text-center">
+        <PermissionBadge active={menu.canApprove} />
       </td>
     </tr>
   );

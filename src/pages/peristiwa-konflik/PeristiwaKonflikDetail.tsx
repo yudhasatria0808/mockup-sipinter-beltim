@@ -5,6 +5,7 @@ import Button from "../../components/ui/button/Button";
 import { EditIcon, CloseIcon, CheckIcon } from "../../components/icons";
 import type { PeristiwaKonflik, StatusApproval, LevelRisikoLabel } from "../../types/peristiwa-konflik";
 import { peristiwaKonflikService } from "../../services/peristiwaKonflikService";
+import { useAuth } from "../../context/AuthContext";
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -20,6 +21,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function PeristiwaKonflikDetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [data, setData] = useState<PeristiwaKonflik | null>(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -33,6 +35,7 @@ export default function PeristiwaKonflikDetail() {
   if (loading) return <div className="flex items-center justify-center py-16"><div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" /></div>;
   if (!data) return <div className="text-center py-20 text-gray-500">Data tidak ditemukan. <button onClick={() => navigate("/peristiwa-konflik")} className="text-brand-500 underline">Kembali</button></div>;
   const s = statusBadge[data.status];
+  const canApprove = user.permissions.some(p => p.menuName === "Form Peristiwa Konflik" && p.canApprove);
 
   return (
     <>
@@ -42,7 +45,7 @@ export default function PeristiwaKonflikDetail() {
           <div><h2 className="text-base font-semibold text-gray-800 dark:text-white/90">Detail Peristiwa Konflik</h2><span className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span></div>
           <div className="flex gap-2 flex-wrap">
             {data.status === "draft" && <Button size="sm" variant="outline" onClick={() => navigate(`/peristiwa-konflik/edit/${data.id}`)} className="gap-1.5"><EditIcon /> Edit</Button>}
-            {data.status === "menunggu" && (<><Button size="sm" onClick={() => { setAction("disetujui"); setShowModal(true); }} className="gap-1.5 bg-success-500 hover:bg-success-600"><CheckIcon /> Setujui</Button><Button size="sm" variant="outline" onClick={() => { setAction("ditolak"); setShowModal(true); }} className="gap-1.5 border-error-300 text-error-600 hover:bg-error-50"><CloseIcon /> Tolak</Button></>)}
+            {data.status === "menunggu" && canApprove && (<><Button size="sm" onClick={() => { setAction("disetujui"); setShowModal(true); }} className="gap-1.5 bg-success-500 hover:bg-success-600"><CheckIcon /> Setujui</Button><Button size="sm" variant="outline" onClick={() => { setAction("ditolak"); setShowModal(true); }} className="gap-1.5 border-error-300 text-error-600 hover:bg-error-50"><CloseIcon /> Tolak</Button></>)}
             <Button size="sm" variant="outline" onClick={() => navigate("/peristiwa-konflik")}>Kembali</Button>
           </div>
         </div>
@@ -75,7 +78,7 @@ export default function PeristiwaKonflikDetail() {
           <Row label="Saran & Tindak Lanjut" value={data.saranTindakLanjut} />
         </Section>
 
-        {(data.status === "disetujui" || data.status === "ditolak") && (<Section title="Informasi Approval"><Row label="Status" value={<span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span>} />{data.approvedBy && <Row label="Diproses oleh" value={data.approvedBy} />}{data.approvedAt && <Row label="Tanggal" value={new Date(data.approvedAt).toLocaleString("id-ID")} />}{data.catatanApproval && <Row label="Catatan" value={data.catatanApproval} />}</Section>)}
+        {(data.status === "disetujui" || data.status === "ditolak") && (<Section title="Informasi Approval"><Row label="Status" value={<span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span>} />{data.approvedBy && <Row label="Diproses oleh" value={`${data.approvedBy}${data.approvedByRole ? ` (${data.approvedByRole})` : ""}`} />}{data.approvedAt && <Row label="Tanggal" value={new Date(data.approvedAt).toLocaleString("id-ID")} />}{data.catatanApproval && <Row label="Catatan" value={data.catatanApproval} />}</Section>)}
         <Section title="Meta"><Row label="Dibuat oleh" value={data.createdBy} /><Row label="Tanggal Dibuat" value={new Date(data.createdAt).toLocaleString("id-ID")} /></Section>
       </div>
 

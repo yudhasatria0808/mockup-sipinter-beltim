@@ -9,6 +9,7 @@ import { DataTable, type DataTableColumn } from "../../components/ui/table";
 import { PlusIcon, SearchIcon, EditIcon, TrashIcon, EyeIcon } from "../../components/icons";
 import type { StatusApproval, LevelRisikoLabel } from "../../types/peristiwa-konflik";
 import { peristiwaKonflikService } from "../../services/peristiwaKonflikService";
+import { useAuth } from "../../context/AuthContext";
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -28,6 +29,8 @@ interface ListItem { id: string; periode: string; namaPeristiwa: string; kabupat
 
 export default function PeristiwaKonflikList() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canCreate = user.permissions.some(p => p.menuName === "Form Peristiwa Konflik" && p.canCreate);
   const [data, setData] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -68,7 +71,7 @@ export default function PeristiwaKonflikList() {
     <>
       <PageMeta title="Form Peristiwa Konflik" description="Daftar Form Peristiwa Konflik" />
       <div className="space-y-4">
-        <PageHeader title="Form Peristiwa Konflik" actions={<Button size="sm" onClick={() => navigate("/peristiwa-konflik/create")} className="gap-1.5"><PlusIcon /> Tambah Data</Button>} />
+        <PageHeader title="Form Peristiwa Konflik" actions={canCreate ? <Button size="sm" onClick={() => navigate("/peristiwa-konflik/create")} className="gap-1.5"><PlusIcon /> Tambah Data</Button> : undefined} />
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><SearchIcon /></span><Input placeholder="Cari nama peristiwa, wilayah..." value={search} onChange={(e) => { setSearch(e.target.value); setPagination((p) => ({ ...p, pageNumber: 1 })); }} className="pl-9" /></div>
           <SelectField value={filterRisiko} onChange={(v) => { setFilterRisiko(v); setPagination((p) => ({ ...p, pageNumber: 1 })); }} options={["Sangat Tinggi", "Tinggi", "Sedang", "Rendah"]} placeholder="Semua Risiko" className="w-auto min-w-[170px]" />

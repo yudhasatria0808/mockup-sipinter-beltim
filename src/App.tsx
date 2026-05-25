@@ -58,6 +58,16 @@ import NotifikasiList from "./pages/notifikasi/NotifikasiList";
 import LaporanPeriodik from "./pages/laporan/LaporanPeriodik";
 import TindakLanjutList from "./pages/tindak-lanjut/TindakLanjutList";
 import TindakLanjutForm from "./pages/tindak-lanjut/TindakLanjutForm";
+import BackupRestore from "./pages/backup-restore/BackupRestore";
+import ForumTopikList from "./pages/forum/ForumTopikList";
+import ForumTopikForm from "./pages/forum/ForumTopikForm";
+import ForumTopikDetail from "./pages/forum/ForumTopikDetail";
+import ForumArahanList from "./pages/forum/ForumArahanList";
+import ForumArahanForm from "./pages/forum/ForumArahanForm";
+import ForumArahanDetail from "./pages/forum/ForumArahanDetail";
+import ForumPengumumanList from "./pages/forum/ForumPengumumanList";
+import ForumPengumumanForm from "./pages/forum/ForumPengumumanForm";
+import ForumPengumumanDetail from "./pages/forum/ForumPengumumanDetail";
 
 const basename = import.meta.env.VITE_BASE_PATH || "/";
 
@@ -151,6 +161,18 @@ export default function App() {
             {/* Tindak Lanjut & Keputusan */}
             <Route path="/tindak-lanjut" element={<TindakLanjutList />} />
             <Route path="/tindak-lanjut/create" element={<TindakLanjutForm />} />
+            {/* Backup & Restore */}
+            <Route path="/backup-restore" element={<BackupRestore />} />
+            {/* Forum Komunikasi Pimpinan Daerah */}
+            <Route path="/forum/topik" element={<ForumTopikList />} />
+            <Route path="/forum/topik/create" element={<ForumTopikForm />} />
+            <Route path="/forum/topik/:id" element={<ForumTopikDetail />} />
+            <Route path="/forum/arahan" element={<ForumArahanList />} />
+            <Route path="/forum/arahan/create" element={<ForumArahanForm />} />
+            <Route path="/forum/arahan/:id" element={<ForumArahanDetail />} />
+            <Route path="/forum/pengumuman" element={<ForumPengumumanList />} />
+            <Route path="/forum/pengumuman/create" element={<ForumPengumumanForm />} />
+            <Route path="/forum/pengumuman/:id" element={<ForumPengumumanDetail />} />
           </Route>
           </Route>
 

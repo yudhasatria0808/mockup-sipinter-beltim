@@ -9,6 +9,7 @@ import { DataTable, type DataTableColumn } from "../../components/ui/table";
 import { PlusIcon, SearchIcon, EditIcon, TrashIcon, EyeIcon } from "../../components/icons";
 import type { StatusApproval, StatusTinggal } from "../../types/wna";
 import { wnaService } from "../../services/wnaService";
+import { useAuth } from "../../context/AuthContext";
 
 const jenisVisaOptions = [
   "KITAS",
@@ -46,6 +47,8 @@ interface ListItem {
 
 export default function WNAList() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canCreate = user.permissions.some(p => p.menuName === "Form WNA" && p.canCreate);
   const [data, setData] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -152,9 +155,9 @@ export default function WNAList() {
         <PageHeader
           title="Form Warga Negara Asing (WNA)"
           actions={
-            <Button size="sm" onClick={() => navigate("/wna/create")} className="gap-1.5">
+            canCreate ? <Button size="sm" onClick={() => navigate("/wna/create")} className="gap-1.5">
               <PlusIcon /> Tambah Data
-            </Button>
+            </Button> : undefined
           }
         />
 

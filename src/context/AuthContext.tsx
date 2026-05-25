@@ -21,6 +21,7 @@ export interface MenuPermission {
   canCreate: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  canApprove: boolean;
   hasAccess: boolean;
 }
 
@@ -44,6 +45,7 @@ const TOKEN_KEY = "sipintar_token";
 
 function mapRoleNameToRole(roleName: string): UserRole {
   const lower = roleName.toLowerCase();
+  if (lower.includes("super admin")) return "administrator";
   if (lower.includes("admin")) return "administrator";
   if (lower.includes("operator")) return "operator";
   return "user";

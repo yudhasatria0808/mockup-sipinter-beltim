@@ -52,6 +52,7 @@ export interface WNA {
   status: StatusApproval;
   catatanApproval?: string;
   approvedBy?: string;
+  approvedByRole?: string;
   approvedAt?: string;
 
   // Meta

@@ -121,6 +121,7 @@ export default function RoleForm() {
                     canCreate: checked,
                     canUpdate: checked,
                     canDelete: checked,
+                    canApprove: checked,
                   };
                 }),
               };
@@ -132,6 +133,7 @@ export default function RoleForm() {
               canCreate: checked,
               canUpdate: checked,
               canDelete: checked,
+              canApprove: checked,
             };
           }),
         };
@@ -151,23 +153,25 @@ export default function RoleForm() {
       const menuPermissions: RoleMenuPermissionRequest[] = [];
       permissions.forEach((modul) => {
         modul.menus.forEach((menu) => {
-          if (menu.canView || menu.canCreate || menu.canUpdate || menu.canDelete) {
+          if (menu.canView || menu.canCreate || menu.canUpdate || menu.canDelete || menu.canApprove) {
             menuPermissions.push({
               menuId: menu.menuId,
               canView: menu.canView,
               canCreate: menu.canCreate,
               canUpdate: menu.canUpdate,
               canDelete: menu.canDelete,
+              canApprove: menu.canApprove,
             });
           }
           menu.child.forEach((child) => {
-            if (child.canView || child.canCreate || child.canUpdate || child.canDelete) {
+            if (child.canView || child.canCreate || child.canUpdate || child.canDelete || child.canApprove) {
               menuPermissions.push({
                 menuId: child.menuId,
                 canView: child.canView,
                 canCreate: child.canCreate,
                 canUpdate: child.canUpdate,
                 canDelete: child.canDelete,
+                canApprove: child.canApprove,
               });
             }
           });
@@ -181,23 +185,25 @@ export default function RoleForm() {
           modulId: modul.modulId,
           menus: [
             ...modul.menus
-              .filter((m) => m.canView || m.canCreate || m.canUpdate || m.canDelete)
+              .filter((m) => m.canView || m.canCreate || m.canUpdate || m.canDelete || m.canApprove)
               .map((m) => ({
                 menuId: m.menuId,
                 canView: m.canView,
                 canCreate: m.canCreate,
                 canUpdate: m.canUpdate,
                 canDelete: m.canDelete,
+                canApprove: m.canApprove,
               })),
             ...modul.menus.flatMap((m) =>
               m.child
-                .filter((c) => c.canView || c.canCreate || c.canUpdate || c.canDelete)
+                .filter((c) => c.canView || c.canCreate || c.canUpdate || c.canDelete || c.canApprove)
                 .map((c) => ({
                   menuId: c.menuId,
                   canView: c.canView,
                   canCreate: c.canCreate,
                   canUpdate: c.canUpdate,
                   canDelete: c.canDelete,
+                  canApprove: c.canApprove,
                 }))
             ),
           ],
@@ -328,6 +334,7 @@ export default function RoleForm() {
                             <th className="w-12 py-2 text-center font-medium">Add</th>
                             <th className="w-12 py-2 text-center font-medium">Edit</th>
                             <th className="w-12 py-2 text-center font-medium">Del</th>
+                            <th className="w-12 py-2 text-center font-medium">Appr</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -397,7 +404,7 @@ function PermissionRow({
   onUpdate,
   onToggleAll,
 }: PermissionRowProps) {
-  const allChecked = menu.canView && menu.canCreate && menu.canUpdate && menu.canDelete;
+  const allChecked = menu.canView && menu.canCreate && menu.canUpdate && menu.canDelete && menu.canApprove;
 
   return (
     <tr>
@@ -433,6 +440,12 @@ function PermissionRow({
         <Checkbox
           checked={menu.canDelete}
           onChange={(checked) => onUpdate(modulId, menu.menuId, "canDelete", checked, isChild, parentMenuId)}
+        />
+      </td>
+      <td className="py-1.5 text-center">
+        <Checkbox
+          checked={menu.canApprove}
+          onChange={(checked) => onUpdate(modulId, menu.menuId, "canApprove", checked, isChild, parentMenuId)}
         />
       </td>
     </tr>

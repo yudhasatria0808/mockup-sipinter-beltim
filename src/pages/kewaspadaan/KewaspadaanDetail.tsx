@@ -5,6 +5,7 @@ import Button from "../../components/ui/button/Button";
 import { EditIcon, CloseIcon, CheckIcon } from "../../components/icons";
 import type { KewaspadaanDini, StatusApproval, LevelRisikoLabel } from "../../types/kewaspadaan";
 import { kewaspadaanService } from "../../services/kewaspadaanService";
+import { useAuth } from "../../context/AuthContext";
 
 const statusBadge: Record<StatusApproval, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -32,6 +33,7 @@ function Row({ label, value }: { label: string; value?: React.ReactNode }) {
 export default function KewaspadaanDetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [data, setData] = useState<KewaspadaanDini | null>(null);
   const [loading, setLoading] = useState(true);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -75,6 +77,7 @@ export default function KewaspadaanDetail() {
   );
 
   const s = statusBadge[data.status];
+  const canApprove = user.permissions.some(p => p.menuName === "Form Kewaspadaan Dini" && p.canApprove);
 
   return (
     <>
@@ -89,7 +92,7 @@ export default function KewaspadaanDetail() {
             {data.status === "draft" && (
               <Button size="sm" variant="outline" onClick={() => navigate(`/kewaspadaan/edit/${data.id}`)} className="gap-1.5"><EditIcon /> Edit</Button>
             )}
-            {data.status === "menunggu" && (
+            {data.status === "menunggu" && canApprove && (
               <>
                 <Button size="sm" onClick={() => { setApprovalAction("disetujui"); setShowApprovalModal(true); }}
                   className="gap-1.5 bg-success-500 hover:bg-success-600"><CheckIcon /> Setujui</Button>
@@ -136,7 +139,7 @@ export default function KewaspadaanDetail() {
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Informasi Approval</h3>
             <Row label="Status" value={<span className={`px-2 py-0.5 rounded-full text-xs font-medium ${s.className}`}>{s.label}</span>} />
-            <Row label="Diproses Oleh" value={data.approvedBy} />
+            <Row label="Diproses Oleh" value={data.approvedBy ? `${data.approvedBy}${data.approvedByRole ? ` (${data.approvedByRole})` : ""}` : "-"} />
             <Row label="Tanggal Proses" value={data.approvedAt ? new Date(data.approvedAt).toLocaleString("id-ID") : "-"} />
             {data.catatanApproval && <Row label="Catatan" value={data.catatanApproval} />}
           </div>

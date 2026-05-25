@@ -43,6 +43,7 @@ export interface TKA {
   status: StatusApproval;
   catatanApproval?: string;
   approvedBy?: string;
+  approvedByRole?: string;
   approvedAt?: string;
 
   // Meta
