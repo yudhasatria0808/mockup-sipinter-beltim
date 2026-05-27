@@ -86,7 +86,7 @@ export default function UserDropdown() {
         </ul>
 
         <button
-          onClick={() => { logout(); navigate("/signin"); }}
+          onClick={() => { logout(); navigate("/beranda"); }}
           className="flex items-center gap-3 px-3 py-2.5 font-medium text-error-600 rounded-xl text-sm hover:bg-error-50 dark:text-error-400 dark:hover:bg-error-500/10 w-full transition-colors"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

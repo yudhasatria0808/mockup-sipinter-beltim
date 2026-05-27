@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
+import LandingPage from "./pages/AuthPages/LandingPage";
 import NotFound from "./pages/OtherPage/NotFound";
 import AppLayout from "./layout/AppLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -78,14 +79,15 @@ export default function App() {
       <AuthProvider>
         <ColorPaletteProvider>
         <Routes>
-          {/* Auth */}
+          {/* Landing & Auth */}
+          <Route path="/beranda" element={<LandingPage />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
 
           {/* Main App — Protected */}
           <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route index path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<AdminDashboard />} />
             <Route path="/roles" element={<RoleList />} />
             <Route path="/roles/create" element={<RoleForm />} />
